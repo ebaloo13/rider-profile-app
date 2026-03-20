@@ -1,0 +1,14 @@
+api_version = "2026-01"
+
+[[extensions]]
+name = "Rider Profile Display"
+handle = "rider-profile-display"
+type = "ui_extension"
+uid = "844cf80f-9470-ea22-c28a-8b32a7eadd0ba37d8a8d"
+
+[[extensions.targeting]]
+module = "./src/ProfileBlockExtension.jsx"
+target = "customer-account.profile.block.render"
+
+[extensions.capabilities]
+api_access = true

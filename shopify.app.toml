@@ -1,0 +1,97 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "4d17032d0397f17ae5827cf80d410ebb"
+name = "rider-profile-app"
+application_url = "https://example.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2026-04"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_customers,write_customers,customer_read_customers,customer_write_customers"
+
+[auth]
+redirect_urls = [ "https://example.com/api/auth" ]
+
+# Declarative metafield definitions for rider_profile namespace (CUSTOMER owner).
+# access.customer_account = "read_write" allows customers to view and edit via the extension.
+# access.customer_account = "read" is read-only for customers.
+# Fields with no access.customer_account are admin-only (not visible to customers).
+
+[customer.metafields.rider_profile.skill_level]
+type = "single_line_text_field"
+name = "Skill Level"
+description = "MTB rider ability: beginner, intermediate, advanced, expert"
+access.customer_account = "read_write"
+
+[customer.metafields.rider_profile.riding_style]
+type = "single_line_text_field"
+name = "Riding Style"
+description = "Preferred MTB discipline: cross-country, trail, all-mountain, enduro, downhill"
+access.customer_account = "read_write"
+
+[customer.metafields.rider_profile.fitness_level]
+type = "single_line_text_field"
+name = "Fitness Level"
+description = "Self-assessed physical fitness: low, moderate, high, athletic"
+access.customer_account = "read_write"
+
+[customer.metafields.rider_profile.multi_day_experience]
+type = "single_line_text_field"
+name = "Multi-Day Experience"
+description = "Previous multi-day MTB trip experience: none, some, experienced"
+access.customer_account = "read_write"
+
+[customer.metafields.rider_profile.country]
+type = "single_line_text_field"
+name = "Country of Residence"
+description = "Customer country of residence for travel logistics"
+access.customer_account = "read_write"
+
+[customer.metafields.rider_profile.dietary_restrictions]
+type = "single_line_text_field"
+name = "Dietary Restrictions"
+description = "Meal planning: none, vegetarian, vegan, gluten-free, other"
+access.customer_account = "read_write"
+
+[customer.metafields.rider_profile.rental_interest]
+type = "single_line_text_field"
+name = "Rental Interest"
+description = "Bike/e-bike rental add-on interest: none, bike, e-bike, undecided"
+access.customer_account = "read_write"
+
+[customer.metafields.rider_profile.height_cm]
+type = "number_integer"
+name = "Height (cm)"
+description = "Rider height in centimeters"
+access.customer_account = "read_write"
+
+[customer.metafields.rider_profile.weight_kg]
+type = "number_integer"
+name = "Weight (kg)"
+description = "Rider weight in kilograms"
+access.customer_account = "read_write"
+
+[customer.metafields.rider_profile.notes]
+type = "multi_line_text_field"
+name = "Notes"
+description = "Customer-facing notes about the rider"
+access.customer_account = "read_write"
+
+[customer.metafields.rider_profile.internal_notes]
+type = "multi_line_text_field"
+name = "Internal Notes"
+description = "Staff-only internal notes about the rider (not visible to customers)"

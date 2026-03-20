@@ -1,0 +1,79 @@
+{
+  "heading": "Rider Profile",
+  "loading": "Loading rider profile...",
+  "error": "Unable to load rider profile. Please try again later.",
+  "emptyState": "Your rider profile hasn't been set up yet. Contact us to get started.",
+  "emptyTitle": "Shape your riding experience",
+  "emptyLead": "Complete your rider profile so we can personalize every trip—from bike setup and fit to route planning and on-bike support.",
+  "emptyDisclaimer": "You can update your details anytime. The more we know, the better we can tailor your ride.",
+  "emptyCta": "Complete profile",
+  "tailorExperience": "Help us tailor your experience",
+  "profileCompletion": "Profile {{percent}}% complete",
+  "updateProfile": "Update profile",
+  "saveProfile": "Save profile",
+  "cancel": "Cancel",
+  "saving": "Saving...",
+  "saveSuccess": "Profile updated successfully.",
+  "saveError": "Something went wrong. Please try again.",
+  "disclaimer": "Share a few details so we can match bike setup, trip pacing, and meals to how you ride. Update anytime.",
+  "selectPlaceholder": "— Select —",
+  "validation": {
+    "height": "Height must be between 100 and 230 cm.",
+    "weight": "Weight must be between 30 and 200 kg."
+  },
+  "summary": {
+    "inProgressTitle": "Profile in progress",
+    "inProgressHint": "Add your skill level and riding style when you’re ready—we’ll highlight the essentials here."
+  },
+  "fields": {
+    "skill_level": "Skill level",
+    "riding_style": "Riding style",
+    "fitness_level": "Fitness level",
+    "multi_day_experience": "Multi-day experience",
+    "country": "Country of residence",
+    "dietary_restrictions": "Dietary restrictions",
+    "rental_interest": "Rental interest",
+    "height_cm": "Height",
+    "weight_kg": "Weight",
+    "notes": "Notes"
+  },
+  "options": {
+    "skill_level": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced",
+      "expert": "Expert"
+    },
+    "riding_style": {
+      "cross-country": "Cross-Country",
+      "trail": "Trail",
+      "all-mountain": "All-Mountain",
+      "enduro": "Enduro",
+      "downhill": "Downhill"
+    },
+    "fitness_level": {
+      "low": "Low",
+      "moderate": "Moderate",
+      "high": "High",
+      "athletic": "Athletic"
+    },
+    "multi_day_experience": {
+      "none": "None",
+      "some": "Some (1–2 trips)",
+      "experienced": "Experienced (3+)"
+    },
+    "dietary_restrictions": {
+      "none": "None",
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "gluten-free": "Gluten-Free",
+      "other": "Other (specify in Notes)"
+    },
+    "rental_interest": {
+      "none": "None (bringing own bike)",
+      "bike": "Bike rental",
+      "e-bike": "E-bike rental",
+      "undecided": "Undecided"
+    }
+  }
+}
