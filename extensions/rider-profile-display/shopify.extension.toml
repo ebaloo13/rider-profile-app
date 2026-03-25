@@ -10,5 +10,9 @@ uid = "844cf80f-9470-ea22-c28a-8b32a7eadd0ba37d8a8d"
 module = "./src/ProfileBlockExtension.jsx"
 target = "customer-account.profile.block.render"
 
+[[extensions.targeting]]
+module = "./src/OrderWaiverBlock.jsx"
+target = "customer-account.order-status.block.render"
+
 [extensions.capabilities]
 api_access = true

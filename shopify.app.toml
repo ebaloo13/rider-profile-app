@@ -21,7 +21,9 @@ api_version = "2026-04"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_customers,write_customers,customer_read_customers,customer_write_customers"
+# customer_read_orders / customer_write_orders: Customer Account API for order metafields (waiver acceptance)
+# read_orders / write_orders: required by Shopify for declarative [order.metafields.*] in shopify.app.toml (dev preview / deploy)
+scopes = "read_customers,write_customers,customer_read_customers,customer_write_customers,customer_read_orders,customer_write_orders,read_orders,write_orders"
 
 [auth]
 redirect_urls = [ "https://example.com/api/auth" ]
@@ -95,3 +97,33 @@ access.customer_account = "read_write"
 type = "multi_line_text_field"
 name = "Internal Notes"
 description = "Staff-only internal notes about the rider (not visible to customers)"
+
+# Andes Freeride — post-order waiver (SHOP + ORDER). Namespace: andes_freeride
+
+[shop.metafields.andes_freeride.waiver_body]
+type = "multi_line_text_field"
+name = "Waiver body"
+description = "Waiver text shown to customers on the order status page"
+access.admin = "merchant_read_write"
+access.customer_account = "read"
+
+[shop.metafields.andes_freeride.waiver_version]
+type = "single_line_text_field"
+name = "Waiver version"
+description = "Version label when terms change (e.g. v1, 2025-03)"
+access.admin = "merchant_read_write"
+access.customer_account = "read"
+
+[order.metafields.andes_freeride.waiver_accepted_at]
+type = "date_time"
+name = "Waiver accepted at"
+description = "When the customer accepted the waiver for this order"
+access.admin = "merchant_read_write"
+access.customer_account = "read_write"
+
+[order.metafields.andes_freeride.waiver_accepted_version]
+type = "single_line_text_field"
+name = "Waiver accepted version"
+description = "Waiver version at time of acceptance"
+access.admin = "merchant_read_write"
+access.customer_account = "read_write"

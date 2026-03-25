@@ -75,5 +75,17 @@
       "e-bike": "E-bike rental",
       "undecided": "Undecided"
     }
+  },
+  "waiver": {
+    "heading": "Activity waiver",
+    "loading": "Loading waiver…",
+    "loadingOrder": "Loading order…",
+    "notConfigured": "The store has not published a waiver yet. Check back later or contact us.",
+    "versionLabel": "Current version: {{version}}",
+    "checkboxLabel": "I have read and agree to this waiver",
+    "submit": "Accept waiver",
+    "submitting": "Saving…",
+    "acceptedLine": "Waiver accepted (version {{version}}).",
+    "acceptedAt": "Accepted on {{date}}"
   }
 }
