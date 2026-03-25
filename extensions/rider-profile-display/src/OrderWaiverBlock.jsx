@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'preact/hooks';
 import { useApi, useOrder } from '@shopify/ui-extensions/customer-account/preact';
 
 const API_VERSION = '2026-01';
-const NS = 'andes_freeride';
+const NS = '$app:andes_freeride';
 
 const WAIVER_QUERY = `#graphql
   query WaiverContext($orderId: ID!) {

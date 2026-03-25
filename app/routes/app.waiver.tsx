@@ -5,7 +5,7 @@ import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 
-const WAIVER_NAMESPACE = "andes_freeride";
+const WAIVER_NAMESPACE = "$app:andes_freeride";
 
 const GET_SHOP_WAIVER = `#graphql
   query ShopWaiver {
