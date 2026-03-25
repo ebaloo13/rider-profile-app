@@ -2,6 +2,18 @@ import { useEffect, useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { useFetcher } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
+import {
+  EMPTY_PROFILE,
+  FIELD_LABELS,
+  PROFILE_FIELD_CONFIG,
+  PROFILE_FIELDS,
+  PROFILE_KEYS,
+  PROFILE_SECTIONS,
+  RECOMMENDED_PROFILE_FIELDS,
+  REQUIRED_PROFILE_FIELDS,
+  type ProfileFieldConfig,
+  type RiderProfileForm,
+} from "../lib/profile-fields";
 import { authenticate } from "../shopify.server";
 
 interface Customer {
@@ -16,78 +28,61 @@ interface Customer {
   } | null;
 }
 
-interface RiderProfileForm {
-  skill_level: string;
-  riding_style: string;
-  fitness_level: string;
-  multi_day_experience: string;
-  country: string;
-  dietary_restrictions: string;
-  rental_interest: string;
-  height_cm: string;
-  weight_kg: string;
-  notes: string;
-  internal_notes: string;
+function ProfileFieldInput({
+  field,
+  value,
+  onChange,
+}: {
+  field: ProfileFieldConfig;
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const ui = field.ui;
+  if (ui.kind === "select") {
+    return (
+      <s-select
+        label={field.label}
+        value={value}
+        onChange={(e) => onChange(e.currentTarget.value ?? "")}
+      >
+        <s-option value="">— Select —</s-option>
+        {ui.options.map((opt) => (
+          <s-option key={opt.value} value={opt.value}>
+            {opt.label}
+          </s-option>
+        ))}
+      </s-select>
+    );
+  }
+  if (ui.kind === "text") {
+    return (
+      <s-text-field
+        label={field.label}
+        value={value}
+        onChange={(e) => onChange(e.currentTarget.value ?? "")}
+      ></s-text-field>
+    );
+  }
+  if (ui.kind === "number") {
+    return (
+      <s-number-field
+        label={field.label}
+        value={value}
+        onChange={(e) => onChange(e.currentTarget.value ?? "")}
+        min={ui.min}
+        max={ui.max}
+      ></s-number-field>
+    );
+  }
+  return (
+    <s-text-area
+      label={field.label}
+      value={value}
+      onChange={(e) => onChange(e.currentTarget.value ?? "")}
+      rows={ui.rows}
+    ></s-text-area>
+  );
 }
-
-const EMPTY_PROFILE: RiderProfileForm = {
-  skill_level: "",
-  riding_style: "",
-  fitness_level: "",
-  multi_day_experience: "",
-  country: "",
-  dietary_restrictions: "",
-  rental_interest: "",
-  height_cm: "",
-  weight_kg: "",
-  notes: "",
-  internal_notes: "",
-};
-
-const PROFILE_FIELDS: Record<keyof RiderProfileForm, string> = {
-  skill_level: "single_line_text_field",
-  riding_style: "single_line_text_field",
-  fitness_level: "single_line_text_field",
-  multi_day_experience: "single_line_text_field",
-  country: "single_line_text_field",
-  dietary_restrictions: "single_line_text_field",
-  rental_interest: "single_line_text_field",
-  height_cm: "number_integer",
-  weight_kg: "number_integer",
-  notes: "multi_line_text_field",
-  internal_notes: "multi_line_text_field",
-};
-
-const PROFILE_KEYS = Object.keys(PROFILE_FIELDS) as Array<keyof RiderProfileForm>;
-
-const FIELD_LABELS: Record<keyof RiderProfileForm, string> = {
-  skill_level: "Skill Level",
-  riding_style: "Riding Style",
-  fitness_level: "Fitness Level",
-  multi_day_experience: "Multi-Day Experience",
-  country: "Country of Residence",
-  dietary_restrictions: "Dietary Restrictions",
-  rental_interest: "Rental Interest",
-  height_cm: "Height (cm)",
-  weight_kg: "Weight (kg)",
-  notes: "Notes",
-  internal_notes: "Internal Notes (Staff Only)",
-};
-
-const REQUIRED_PROFILE_FIELDS: Array<keyof RiderProfileForm> = [
-  "skill_level",
-  "riding_style",
-  "fitness_level",
-  "multi_day_experience",
-];
-
-const RECOMMENDED_PROFILE_FIELDS: Array<keyof RiderProfileForm> = [
-  "country",
-  "dietary_restrictions",
-  "rental_interest",
-  "height_cm",
-  "weight_kg",
-];
 
 function formatLocation(address: Customer["defaultAddress"]): string | null {
   if (!address) return null;
@@ -598,140 +593,30 @@ export default function RiderProfile() {
         {uiMode === "view" ? (
           <s-section heading="Completed Rider Profile">
             <s-stack direction="block" gap="base">
-              {(Object.keys(FIELD_LABELS) as Array<keyof RiderProfileForm>).map(
-                (key) => (
-                  <s-paragraph key={key}>
-                    <s-text>{FIELD_LABELS[key]}: </s-text>
-                    <s-text>{viewProfile[key] || "—"}</s-text>
-                  </s-paragraph>
-                ),
-              )}
+              {PROFILE_FIELD_CONFIG.map((field) => (
+                <s-paragraph key={field.key}>
+                  <s-text>{field.label}: </s-text>
+                  <s-text>{viewProfile[field.key] || "—"}</s-text>
+                </s-paragraph>
+              ))}
             </s-stack>
           </s-section>
         ) : (
           <>
-        <s-section heading="Qualification">
-          <s-select
-            label="Skill Level"
-            value={profile.skill_level}
-            onChange={(e) => updateField("skill_level", e.currentTarget.value ?? "")}
-          >
-            <s-option value="">— Select —</s-option>
-            <s-option value="beginner">Beginner</s-option>
-            <s-option value="intermediate">Intermediate</s-option>
-            <s-option value="advanced">Advanced</s-option>
-            <s-option value="expert">Expert</s-option>
-          </s-select>
-
-          <s-select
-            label="Riding Style"
-            value={profile.riding_style}
-            onChange={(e) => updateField("riding_style", e.currentTarget.value ?? "")}
-          >
-            <s-option value="">— Select —</s-option>
-            <s-option value="cross-country">Cross-Country</s-option>
-            <s-option value="trail">Trail</s-option>
-            <s-option value="all-mountain">All-Mountain</s-option>
-            <s-option value="enduro">Enduro</s-option>
-            <s-option value="downhill">Downhill</s-option>
-          </s-select>
-
-          <s-select
-            label="Fitness Level"
-            value={profile.fitness_level}
-            onChange={(e) => updateField("fitness_level", e.currentTarget.value ?? "")}
-          >
-            <s-option value="">— Select —</s-option>
-            <s-option value="low">Low</s-option>
-            <s-option value="moderate">Moderate</s-option>
-            <s-option value="high">High</s-option>
-            <s-option value="athletic">Athletic</s-option>
-          </s-select>
-
-          <s-select
-            label="Multi-Day Experience"
-            value={profile.multi_day_experience}
-            onChange={(e) =>
-              updateField("multi_day_experience", e.currentTarget.value ?? "")
-            }
-          >
-            <s-option value="">— Select —</s-option>
-            <s-option value="none">None</s-option>
-            <s-option value="some">Some (1–2 trips)</s-option>
-            <s-option value="experienced">Experienced (3+)</s-option>
-          </s-select>
-        </s-section>
-
-        <s-section heading="Trip Logistics">
-          <s-text-field
-            label="Country of Residence"
-            value={profile.country}
-            onChange={(e) => updateField("country", e.currentTarget.value ?? "")}
-          ></s-text-field>
-
-          <s-select
-            label="Dietary Restrictions"
-            value={profile.dietary_restrictions}
-            onChange={(e) =>
-              updateField("dietary_restrictions", e.currentTarget.value ?? "")
-            }
-          >
-            <s-option value="">— Select —</s-option>
-            <s-option value="none">None</s-option>
-            <s-option value="vegetarian">Vegetarian</s-option>
-            <s-option value="vegan">Vegan</s-option>
-            <s-option value="gluten-free">Gluten-Free</s-option>
-            <s-option value="other">Other (specify in Notes)</s-option>
-          </s-select>
-
-          <s-select
-            label="Rental Interest"
-            value={profile.rental_interest}
-            onChange={(e) =>
-              updateField("rental_interest", e.currentTarget.value ?? "")
-            }
-          >
-            <s-option value="">— Select —</s-option>
-            <s-option value="none">None (bringing own bike)</s-option>
-            <s-option value="bike">Bike rental</s-option>
-            <s-option value="e-bike">E-bike rental</s-option>
-            <s-option value="undecided">Undecided</s-option>
-          </s-select>
-        </s-section>
-
-        <s-section heading="Physical Info">
-          <s-number-field
-            label="Height (cm)"
-            value={profile.height_cm}
-            onChange={(e) => updateField("height_cm", e.currentTarget.value ?? "")}
-            min={100}
-            max={230}
-          ></s-number-field>
-
-          <s-number-field
-            label="Weight (kg)"
-            value={profile.weight_kg}
-            onChange={(e) => updateField("weight_kg", e.currentTarget.value ?? "")}
-            min={30}
-            max={200}
-          ></s-number-field>
-        </s-section>
-
-        <s-section heading="Notes">
-          <s-text-area
-            label="Notes"
-            value={profile.notes}
-            onChange={(e) => updateField("notes", e.currentTarget.value ?? "")}
-            rows={4}
-          ></s-text-area>
-
-          <s-text-area
-            label="Internal Notes (Staff Only)"
-            value={profile.internal_notes}
-            onChange={(e) => updateField("internal_notes", e.currentTarget.value ?? "")}
-            rows={4}
-          ></s-text-area>
-        </s-section>
+            {PROFILE_SECTIONS.map((sectionHeading) => (
+              <s-section key={sectionHeading} heading={sectionHeading}>
+                {PROFILE_FIELD_CONFIG.filter((f) => f.section === sectionHeading).map(
+                  (field) => (
+                    <ProfileFieldInput
+                      key={field.key}
+                      field={field}
+                      value={profile[field.key]}
+                      onChange={(v) => updateField(field.key, v)}
+                    />
+                  ),
+                )}
+              </s-section>
+            ))}
 
         {saveErrors.length > 0 && (
           <s-section heading="Save Errors">

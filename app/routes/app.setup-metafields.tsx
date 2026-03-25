@@ -2,119 +2,13 @@ import { useEffect } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { useFetcher } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
+import {
+  RIDER_METAFIELD_DEFINITIONS,
+  type RiderMetafieldDefinitionInput,
+} from "../lib/profile-fields";
 import { authenticate } from "../shopify.server";
 
-/** Customer Account API: must match shopify.app.toml access.customer_account. */
-type CustomerAccountAccess = "READ_WRITE" | "NONE";
-
-type RiderMetafieldDefinition = {
-  name: string;
-  namespace: string;
-  key: string;
-  type: string;
-  description: string;
-  customerAccountAccess: CustomerAccountAccess;
-};
-
-const METAFIELD_DEFINITIONS: RiderMetafieldDefinition[] = [
-  {
-    name: "Skill Level",
-    namespace: "rider_profile",
-    key: "skill_level",
-    type: "single_line_text_field",
-    description:
-      "MTB rider ability: beginner, intermediate, advanced, expert",
-    customerAccountAccess: "READ_WRITE",
-  },
-  {
-    name: "Riding Style",
-    namespace: "rider_profile",
-    key: "riding_style",
-    type: "single_line_text_field",
-    description:
-      "Preferred MTB discipline: cross-country, trail, all-mountain, enduro, downhill",
-    customerAccountAccess: "READ_WRITE",
-  },
-  {
-    name: "Fitness Level",
-    namespace: "rider_profile",
-    key: "fitness_level",
-    type: "single_line_text_field",
-    description:
-      "Self-assessed physical fitness: low, moderate, high, athletic",
-    customerAccountAccess: "READ_WRITE",
-  },
-  {
-    name: "Multi-Day Experience",
-    namespace: "rider_profile",
-    key: "multi_day_experience",
-    type: "single_line_text_field",
-    description:
-      "Previous multi-day MTB trip experience: none, some, experienced",
-    customerAccountAccess: "READ_WRITE",
-  },
-  {
-    name: "Country of Residence",
-    namespace: "rider_profile",
-    key: "country",
-    type: "single_line_text_field",
-    description: "Customer country of residence for travel logistics",
-    customerAccountAccess: "READ_WRITE",
-  },
-  {
-    name: "Dietary Restrictions",
-    namespace: "rider_profile",
-    key: "dietary_restrictions",
-    type: "single_line_text_field",
-    description:
-      "Meal planning: none, vegetarian, vegan, gluten-free, other",
-    customerAccountAccess: "READ_WRITE",
-  },
-  {
-    name: "Rental Interest",
-    namespace: "rider_profile",
-    key: "rental_interest",
-    type: "single_line_text_field",
-    description:
-      "Bike/e-bike rental add-on interest: none, bike, e-bike, undecided",
-    customerAccountAccess: "READ_WRITE",
-  },
-  {
-    name: "Height (cm)",
-    namespace: "rider_profile",
-    key: "height_cm",
-    type: "number_integer",
-    description: "Rider height in centimeters",
-    customerAccountAccess: "READ_WRITE",
-  },
-  {
-    name: "Weight (kg)",
-    namespace: "rider_profile",
-    key: "weight_kg",
-    type: "number_integer",
-    description: "Rider weight in kilograms",
-    customerAccountAccess: "READ_WRITE",
-  },
-  {
-    name: "Notes",
-    namespace: "rider_profile",
-    key: "notes",
-    type: "multi_line_text_field",
-    description: "Customer-facing notes about the rider",
-    customerAccountAccess: "READ_WRITE",
-  },
-  {
-    name: "Internal Notes",
-    namespace: "rider_profile",
-    key: "internal_notes",
-    type: "multi_line_text_field",
-    description:
-      "Staff-only internal notes about the rider (not visible to customers)",
-    customerAccountAccess: "NONE",
-  },
-];
-
-function definitionForCreate(def: RiderMetafieldDefinition) {
+function definitionForCreate(def: RiderMetafieldDefinitionInput) {
   return {
     name: def.name,
     namespace: def.namespace,
@@ -128,7 +22,7 @@ function definitionForCreate(def: RiderMetafieldDefinition) {
   };
 }
 
-function definitionForAccessUpdate(def: RiderMetafieldDefinition) {
+function definitionForAccessUpdate(def: RiderMetafieldDefinitionInput) {
   return {
     namespace: def.namespace,
     key: def.key,
@@ -200,7 +94,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         e.message.includes("Key is in use"),
     );
 
-  for (const def of METAFIELD_DEFINITIONS) {
+  for (const def of RIDER_METAFIELD_DEFINITIONS) {
     const createResponse = await admin.graphql(CREATE_METAFIELD_DEFINITION, {
       variables: {
         definition: definitionForCreate(def),

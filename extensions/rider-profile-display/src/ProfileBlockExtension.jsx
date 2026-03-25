@@ -1,69 +1,24 @@
 import '@shopify/ui-extensions/preact';
 import { render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
+import {
+  CUSTOMER_ACCOUNT_PROFILE_FIELDS,
+  RIDER_PROFILE_METAFIELD_NAMESPACE,
+  customerAccountRiderProfileQueryDocument,
+} from '../../../app/lib/profile-fields';
 
 const API_VERSION = '2026-01';
 
-const RIDER_PROFILE_QUERY = {
-  query: `query getCustomerRiderProfile {
-    customer {
-      id
-      metafields(identifiers: [
-        { namespace: "rider_profile", key: "skill_level" },
-        { namespace: "rider_profile", key: "riding_style" },
-        { namespace: "rider_profile", key: "fitness_level" },
-        { namespace: "rider_profile", key: "multi_day_experience" },
-        { namespace: "rider_profile", key: "country" },
-        { namespace: "rider_profile", key: "dietary_restrictions" },
-        { namespace: "rider_profile", key: "rental_interest" },
-        { namespace: "rider_profile", key: "height_cm" },
-        { namespace: "rider_profile", key: "weight_kg" },
-        { namespace: "rider_profile", key: "notes" }
-      ]) {
-        key
-        value
-      }
-    }
-  }`,
-};
+const RIDER_PROFILE_QUERY = customerAccountRiderProfileQueryDocument();
 
-const FIELD_ORDER = [
-  'skill_level',
-  'riding_style',
-  'fitness_level',
-  'multi_day_experience',
-  'country',
-  'dietary_restrictions',
-  'rental_interest',
-  'height_cm',
-  'weight_kg',
-];
+const METAFIELD_TYPE_BY_KEY = new Map(
+  CUSTOMER_ACCOUNT_PROFILE_FIELDS.map((f) => [f.key, f.metafieldType]),
+);
 
-const EDITABLE_FIELDS = [
-  'skill_level',
-  'riding_style',
-  'fitness_level',
-  'multi_day_experience',
-  'country',
-  'dietary_restrictions',
-  'rental_interest',
-  'height_cm',
-  'weight_kg',
-  'notes',
-];
+/** View grid: same order as config, excluding notes (full-width block below). */
+const VIEW_GRID_FIELDS = CUSTOMER_ACCOUNT_PROFILE_FIELDS.filter((f) => f.key !== 'notes');
 
-const FIELD_TYPES = {
-  skill_level: 'single_line_text_field',
-  riding_style: 'single_line_text_field',
-  fitness_level: 'single_line_text_field',
-  multi_day_experience: 'single_line_text_field',
-  country: 'single_line_text_field',
-  dietary_restrictions: 'single_line_text_field',
-  rental_interest: 'single_line_text_field',
-  height_cm: 'number_integer',
-  weight_kg: 'number_integer',
-  notes: 'multi_line_text_field',
-};
+const EDITABLE_FIELD_KEYS = CUSTOMER_ACCOUNT_PROFILE_FIELDS.map((f) => f.key);
 
 function isFieldComplete(value) {
   if (value === undefined || value === null) return false;
@@ -71,8 +26,8 @@ function isFieldComplete(value) {
 }
 
 function completionPercent(source) {
-  const filled = EDITABLE_FIELDS.filter((key) => isFieldComplete(source[key])).length;
-  return Math.round((filled / EDITABLE_FIELDS.length) * 100);
+  const filled = EDITABLE_FIELD_KEYS.filter((key) => isFieldComplete(source[key])).length;
+  return Math.round((filled / EDITABLE_FIELD_KEYS.length) * 100);
 }
 
 function formatValue(key, value) {
@@ -139,6 +94,76 @@ function RiderSummaryCard({ i18n, profile }) {
   );
 }
 
+function CustomerAccountFieldInput({ field, i18n, editValues, updateEdit }) {
+  const ui = field.ui;
+  const labelKey = `fields.${field.key}`;
+  const value = editValues[field.key] ?? '';
+
+  if (ui.kind === 'select') {
+    return (
+      <s-select
+        label={i18n.translate(labelKey)}
+        value={value}
+        onChange={(e) => updateEdit(field.key, e.currentTarget.value ?? '')}
+      >
+        <s-option value="">{i18n.translate('selectPlaceholder')}</s-option>
+        {ui.options.map((opt) => (
+          <s-option key={opt.value} value={opt.value}>
+            {i18n.translate(`options.${field.key}.${opt.value}`)}
+          </s-option>
+        ))}
+      </s-select>
+    );
+  }
+
+  if (ui.kind === 'text') {
+    return (
+      <s-text-field
+        label={i18n.translate(labelKey)}
+        value={value}
+        onChange={(e) => updateEdit(field.key, e.currentTarget.value ?? '')}
+      />
+    );
+  }
+
+  if (ui.kind === 'number') {
+    return (
+      <s-number-field
+        label={i18n.translate(labelKey)}
+        value={value}
+        onChange={(e) => updateEdit(field.key, e.currentTarget.value ?? '')}
+        min={ui.min}
+        max={ui.max}
+      />
+    );
+  }
+
+  if (ui.kind === 'textarea') {
+    const rows = field.key === 'notes' ? 3 : ui.rows;
+    return (
+      <s-text-area
+        label={i18n.translate(labelKey)}
+        value={value}
+        onChange={(e) => updateEdit(field.key, e.currentTarget.value ?? '')}
+        rows={rows}
+      />
+    );
+  }
+
+  if (ui.kind === 'boolean') {
+    const checked = value === true || value === 'true' || value === '1';
+    return (
+      <s-checkbox
+        label={i18n.translate(labelKey)}
+        checked={checked}
+        onChange={(e) => updateEdit(field.key, e.currentTarget.checked ? 'true' : '')}
+      />
+    );
+  }
+
+  return null;
+}
+
 async function fetchProfile() {
   const res = await fetch(
     `shopify://customer-account/api/${API_VERSION}/graphql.json`,
@@ -167,9 +192,9 @@ async function fetchProfile() {
 async function saveProfileFields(customerId, fields) {
   const metafields = fields.map(({ key, value }) => ({
     ownerId: customerId,
-    namespace: 'rider_profile',
+    namespace: RIDER_PROFILE_METAFIELD_NAMESPACE,
     key,
-    type: FIELD_TYPES[key],
+    type: METAFIELD_TYPE_BY_KEY.get(key),
     value,
   }));
 
@@ -191,6 +216,39 @@ async function saveProfileFields(customerId, fields) {
   );
   const { data } = await res.json();
   return data.metafieldsSet;
+}
+
+function collectFieldsToSave(editValues) {
+  const fields = [];
+  for (const field of CUSTOMER_ACCOUNT_PROFILE_FIELDS) {
+    const v = editValues[field.key];
+    if (field.ui.kind === 'boolean') {
+      fields.push({
+        key: field.key,
+        value: v === true || v === 'true' ? 'true' : 'false',
+      });
+      continue;
+    }
+    if (v !== undefined && v !== '') {
+      fields.push({ key: field.key, value: String(v) });
+    }
+  }
+  return fields;
+}
+
+function validateNumberFields(editValues, i18n) {
+  for (const field of CUSTOMER_ACCOUNT_PROFILE_FIELDS) {
+    if (field.ui.kind !== 'number') continue;
+    const raw = editValues[field.key];
+    if (raw === '' || raw === undefined) continue;
+    const num = Number(raw);
+    if (isNaN(num) || num < field.ui.min || num > field.ui.max) {
+      if (field.key === 'height_cm') return i18n.translate('validation.height');
+      if (field.key === 'weight_kg') return i18n.translate('validation.weight');
+      return i18n.translate('saveError');
+    }
+  }
+  return null;
 }
 
 export default async () => {
@@ -229,8 +287,8 @@ function ProfileBlockExtension() {
 
   const startEdit = () => {
     const initial = {};
-    for (const key of EDITABLE_FIELDS) {
-      initial[key] = profile[key] ?? '';
+    for (const field of CUSTOMER_ACCOUNT_PROFILE_FIELDS) {
+      initial[field.key] = profile[field.key] ?? '';
     }
     setEditValues(initial);
     setSaveMessage(null);
@@ -242,28 +300,10 @@ function ProfileBlockExtension() {
     setSaveMessage(null);
   };
 
-  const validateFields = () => {
-    const h = editValues.height_cm;
-    if (h !== '' && h !== undefined) {
-      const num = Number(h);
-      if (isNaN(num) || num < 100 || num > 230) {
-        return i18n.translate('validation.height');
-      }
-    }
-    const w = editValues.weight_kg;
-    if (w !== '' && w !== undefined) {
-      const num = Number(w);
-      if (isNaN(num) || num < 30 || num > 200) {
-        return i18n.translate('validation.weight');
-      }
-    }
-    return null;
-  };
-
   const handleSave = async () => {
     if (!customerId) return;
 
-    const validationError = validateFields();
+    const validationError = validateNumberFields(editValues, i18n);
     if (validationError) {
       setSaveMessage({ type: 'error', text: validationError });
       return;
@@ -272,9 +312,7 @@ function ProfileBlockExtension() {
     setSaving(true);
     setSaveMessage(null);
 
-    const fields = EDITABLE_FIELDS.filter(
-      (key) => editValues[key] !== undefined && editValues[key] !== '',
-    ).map((key) => ({ key, value: String(editValues[key]) }));
+    const fields = collectFieldsToSave(editValues);
 
     if (fields.length === 0) {
       setSaving(false);
@@ -346,107 +384,15 @@ function ProfileBlockExtension() {
           <CompletionStatus i18n={i18n} percent={pctEdit} />
           <s-text color="subdued">{i18n.translate('disclaimer')}</s-text>
 
-          <s-select
-            label={i18n.translate('fields.skill_level')}
-            value={editValues.skill_level ?? ''}
-            onChange={(e) => updateEdit('skill_level', e.currentTarget.value ?? '')}
-          >
-            <s-option value="">{i18n.translate('selectPlaceholder')}</s-option>
-            <s-option value="beginner">{i18n.translate('options.skill_level.beginner')}</s-option>
-            <s-option value="intermediate">{i18n.translate('options.skill_level.intermediate')}</s-option>
-            <s-option value="advanced">{i18n.translate('options.skill_level.advanced')}</s-option>
-            <s-option value="expert">{i18n.translate('options.skill_level.expert')}</s-option>
-          </s-select>
-
-          <s-select
-            label={i18n.translate('fields.riding_style')}
-            value={editValues.riding_style ?? ''}
-            onChange={(e) => updateEdit('riding_style', e.currentTarget.value ?? '')}
-          >
-            <s-option value="">{i18n.translate('selectPlaceholder')}</s-option>
-            <s-option value="cross-country">{i18n.translate('options.riding_style.cross-country')}</s-option>
-            <s-option value="trail">{i18n.translate('options.riding_style.trail')}</s-option>
-            <s-option value="all-mountain">{i18n.translate('options.riding_style.all-mountain')}</s-option>
-            <s-option value="enduro">{i18n.translate('options.riding_style.enduro')}</s-option>
-            <s-option value="downhill">{i18n.translate('options.riding_style.downhill')}</s-option>
-          </s-select>
-
-          <s-select
-            label={i18n.translate('fields.fitness_level')}
-            value={editValues.fitness_level ?? ''}
-            onChange={(e) => updateEdit('fitness_level', e.currentTarget.value ?? '')}
-          >
-            <s-option value="">{i18n.translate('selectPlaceholder')}</s-option>
-            <s-option value="low">{i18n.translate('options.fitness_level.low')}</s-option>
-            <s-option value="moderate">{i18n.translate('options.fitness_level.moderate')}</s-option>
-            <s-option value="high">{i18n.translate('options.fitness_level.high')}</s-option>
-            <s-option value="athletic">{i18n.translate('options.fitness_level.athletic')}</s-option>
-          </s-select>
-
-          <s-select
-            label={i18n.translate('fields.multi_day_experience')}
-            value={editValues.multi_day_experience ?? ''}
-            onChange={(e) => updateEdit('multi_day_experience', e.currentTarget.value ?? '')}
-          >
-            <s-option value="">{i18n.translate('selectPlaceholder')}</s-option>
-            <s-option value="none">{i18n.translate('options.multi_day_experience.none')}</s-option>
-            <s-option value="some">{i18n.translate('options.multi_day_experience.some')}</s-option>
-            <s-option value="experienced">{i18n.translate('options.multi_day_experience.experienced')}</s-option>
-          </s-select>
-
-          <s-text-field
-            label={i18n.translate('fields.country')}
-            value={editValues.country ?? ''}
-            onChange={(e) => updateEdit('country', e.currentTarget.value ?? '')}
-          />
-
-          <s-select
-            label={i18n.translate('fields.dietary_restrictions')}
-            value={editValues.dietary_restrictions ?? ''}
-            onChange={(e) => updateEdit('dietary_restrictions', e.currentTarget.value ?? '')}
-          >
-            <s-option value="">{i18n.translate('selectPlaceholder')}</s-option>
-            <s-option value="none">{i18n.translate('options.dietary_restrictions.none')}</s-option>
-            <s-option value="vegetarian">{i18n.translate('options.dietary_restrictions.vegetarian')}</s-option>
-            <s-option value="vegan">{i18n.translate('options.dietary_restrictions.vegan')}</s-option>
-            <s-option value="gluten-free">{i18n.translate('options.dietary_restrictions.gluten-free')}</s-option>
-            <s-option value="other">{i18n.translate('options.dietary_restrictions.other')}</s-option>
-          </s-select>
-
-          <s-select
-            label={i18n.translate('fields.rental_interest')}
-            value={editValues.rental_interest ?? ''}
-            onChange={(e) => updateEdit('rental_interest', e.currentTarget.value ?? '')}
-          >
-            <s-option value="">{i18n.translate('selectPlaceholder')}</s-option>
-            <s-option value="none">{i18n.translate('options.rental_interest.none')}</s-option>
-            <s-option value="bike">{i18n.translate('options.rental_interest.bike')}</s-option>
-            <s-option value="e-bike">{i18n.translate('options.rental_interest.e-bike')}</s-option>
-            <s-option value="undecided">{i18n.translate('options.rental_interest.undecided')}</s-option>
-          </s-select>
-
-          <s-number-field
-            label={i18n.translate('fields.height_cm')}
-            value={editValues.height_cm ?? ''}
-            onChange={(e) => updateEdit('height_cm', e.currentTarget.value ?? '')}
-            min={100}
-            max={230}
-          />
-
-          <s-number-field
-            label={i18n.translate('fields.weight_kg')}
-            value={editValues.weight_kg ?? ''}
-            onChange={(e) => updateEdit('weight_kg', e.currentTarget.value ?? '')}
-            min={30}
-            max={200}
-          />
-
-          <s-text-area
-            label={i18n.translate('fields.notes')}
-            value={editValues.notes ?? ''}
-            onChange={(e) => updateEdit('notes', e.currentTarget.value ?? '')}
-            rows={3}
-          />
+          {CUSTOMER_ACCOUNT_PROFILE_FIELDS.map((field) => (
+            <CustomerAccountFieldInput
+              key={field.key}
+              field={field}
+              i18n={i18n}
+              editValues={editValues}
+              updateEdit={updateEdit}
+            />
+          ))}
 
           {saveMessage?.type === 'error' && (
             <s-text color="critical">{saveMessage.text}</s-text>
@@ -466,7 +412,7 @@ function ProfileBlockExtension() {
   }
 
   // View mode
-  const filledFields = FIELD_ORDER.filter((key) => profile[key]);
+  const filledFields = VIEW_GRID_FIELDS.filter((f) => profile[f.key]);
   const pctView = completionPercent(profile);
 
   return (
@@ -478,10 +424,10 @@ function ProfileBlockExtension() {
         <CompletionStatus i18n={i18n} percent={pctView} />
         <RiderSummaryCard i18n={i18n} profile={profile} />
         <s-grid gridTemplateColumns="1fr 1fr" gap="base">
-          {filledFields.map((key) => (
-            <s-stack direction="block" gap="small" key={key}>
-              <s-text color="subdued">{i18n.translate(`fields.${key}`)}</s-text>
-              <s-text type="strong">{formatValue(key, profile[key])}</s-text>
+          {filledFields.map((f) => (
+            <s-stack direction="block" gap="small" key={f.key}>
+              <s-text color="subdued">{i18n.translate(`fields.${f.key}`)}</s-text>
+              <s-text type="strong">{formatValue(f.key, profile[f.key])}</s-text>
             </s-stack>
           ))}
         </s-grid>
