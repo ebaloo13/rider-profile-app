@@ -1,0 +1,12 @@
+{
+  "booking": {
+    "heading": "Booking coordination",
+    "loading": "Loading your booking status…",
+    "loadingOrder": "Loading order…",
+    "empty": "Your booking details will appear here once our team has updated them for this order. If you have questions, reply to your order confirmation email.",
+    "bookingLabel": "Booking status",
+    "noteLabel": "Message from our team",
+    "paymentLabel": "Payment",
+    "noteFallback": "No additional details yet."
+  }
+}

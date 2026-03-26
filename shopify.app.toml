@@ -127,3 +127,26 @@ name = "Waiver accepted version"
 description = "Waiver version at time of acceptance"
 access.admin = "merchant_read_write"
 access.customer_account = "read_write"
+
+# Andes Freeride — booking coordination (ORDER). Staff edits in embedded app; customers read on order status.
+
+[order.metafields.andes_freeride.booking_status]
+type = "single_line_text_field"
+name = "Booking status"
+description = "Booking coordination: pending, under_review, confirmed, needs_attention"
+access.admin = "merchant_read_write"
+access.customer_account = "read"
+
+[order.metafields.andes_freeride.booking_status_note]
+type = "single_line_text_field"
+name = "Booking status note"
+description = "Short customer-visible note for booking coordination"
+access.admin = "merchant_read_write"
+access.customer_account = "read"
+
+[order.metafields.andes_freeride.payment_status]
+type = "single_line_text_field"
+name = "Payment status"
+description = "Simple payment line: pending, authorized, paid, action_required"
+access.admin = "merchant_read_write"
+access.customer_account = "read"

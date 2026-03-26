@@ -1,0 +1,12 @@
+{
+  "booking": {
+    "heading": "Coordination de réservation",
+    "loading": "Chargement du statut de réservation…",
+    "loadingOrder": "Chargement de la commande…",
+    "empty": "Les détails de votre réservation apparaîtront ici une fois que notre équipe les aura mis à jour pour cette commande. Pour toute question, répondez à l’e-mail de confirmation de commande.",
+    "bookingLabel": "Statut de réservation",
+    "noteLabel": "Message de notre équipe",
+    "paymentLabel": "Paiement",
+    "noteFallback": "Pas de détail supplémentaire pour le moment."
+  }
+}

@@ -25,6 +25,16 @@ export type ProfileSection = (typeof PROFILE_SECTIONS)[number];
 
 export const PROFILE_FIELD_CONFIG = [
   {
+    key: "emergency_contact_name",
+    metafieldType: "single_line_text_field",
+    label: "Emergency Contact Name",
+    definitionDescription: "Name of the customer's emergency contact.",
+    customerAccountAccess: "READ_WRITE",
+    section: "Trip Logistics",
+    recommended: true,
+    ui: { kind: "text" },
+  },
+  {
     key: "skill_level",
     metafieldType: "single_line_text_field",
     label: "Skill Level",

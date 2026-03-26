@@ -20,6 +20,7 @@ export default function App() {
       <s-app-nav>
         <s-link href="/app">Home</s-link>
         <s-link href="/app/rider-profile">Rider Profile</s-link>
+        <s-link href="/app/booking-coordination">Booking coordination</s-link>
         <s-link href="/app/setup-metafields">Setup Metafields</s-link>
         <s-link href="/app/waiver">Waiver</s-link>
       </s-app-nav>

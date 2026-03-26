@@ -119,7 +119,7 @@ const SEARCH_CUSTOMERS = `#graphql
 const GET_CUSTOMER_PROFILE = `#graphql
   query getCustomerProfile($customerId: ID!) {
     customer(id: $customerId) {
-      metafields(first: 20, namespace: "rider_profile") {
+      riderProfile: metafields(first: 20, namespace: "rider_profile") {
         edges {
           node {
             key
@@ -191,17 +191,22 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (intent === "load") {
     const customerId = formData.get("customerId");
     if (typeof customerId !== "string") {
-      return { intent: "load", profile: {}, hasExistingProfile: false };
+      return {
+        intent: "load",
+        profile: {},
+        hasExistingProfile: false,
+      };
     }
 
     const response = await admin.graphql(GET_CUSTOMER_PROFILE, {
       variables: { customerId },
     });
     const json = await response.json();
-    const edges = json.data!.customer!.metafields!.edges ?? [];
+    const customer = json.data!.customer!;
+    const riderEdges = customer.riderProfile!.edges ?? [];
 
     const profile: Record<string, string> = {};
-    for (const edge of edges) {
+    for (const edge of riderEdges) {
       const { key, value } = edge.node as { key: string; value: string };
       if (key in PROFILE_FIELDS) {
         profile[key] = value;
@@ -363,7 +368,7 @@ export default function RiderProfile() {
   useEffect(() => {
     if (saveFetcher.data && "saved" in saveFetcher.data) {
       if (saveFetcher.data.saved) {
-        shopify.toast.show("Rider profile saved");
+        shopify.toast.show("Saved");
         setSavedProfile({ ...profile });
         setSaveErrors([]);
         setUiMode("view");
@@ -374,7 +379,7 @@ export default function RiderProfile() {
         shopify.toast.show(`Error: ${errors.join(", ")}`, { isError: true });
       }
     }
-  }, [saveFetcher.data, shopify]);
+  }, [saveFetcher.data, shopify, profile]);
 
   const customers = fetcher.data?.customers ?? [];
   const searchPerformed = fetcher.data?.searchPerformed ?? false;
@@ -407,7 +412,7 @@ export default function RiderProfile() {
     setShowOverwriteWarning(false);
   };
 
-  const hasChangesAgainstSavedProfile =
+  const hasRiderChangesAgainstSaved =
     savedProfile !== null &&
     PROFILE_KEYS.some((key) => profile[key] !== savedProfile[key]);
 
@@ -425,7 +430,9 @@ export default function RiderProfile() {
   };
 
   const handleSave = () => {
-    if (savedProfile && hasChangesAgainstSavedProfile) {
+    const needsOverwrite =
+      savedProfile !== null && hasRiderChangesAgainstSaved;
+    if (needsOverwrite) {
       setShowOverwriteWarning(true);
       return;
     }
@@ -570,7 +577,7 @@ export default function RiderProfile() {
         {uiMode === "edit" && showOverwriteWarning && (
           <s-section heading="Confirm Overwrite">
             <s-paragraph>
-              This customer already has saved rider profile data. Saving now will
+              This customer already has a saved rider profile. Saving now will
               overwrite existing values, and any previously saved field you leave
               blank will be removed.
             </s-paragraph>
