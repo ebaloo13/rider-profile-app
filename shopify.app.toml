@@ -2,6 +2,7 @@
 
 client_id = "4d17032d0397f17ae5827cf80d410ebb"
 name = "rider-profile-app"
+# TODO before deployment: replace with the production app URL.
 application_url = "https://example.com"
 embedded = true
 
@@ -26,12 +27,19 @@ api_version = "2026-04"
 scopes = "read_customers,write_customers,customer_read_customers,customer_write_customers,customer_read_orders,customer_write_orders,read_orders,write_orders"
 
 [auth]
+# TODO before deployment: replace with the production auth callback URL for this app.
 redirect_urls = [ "https://example.com/api/auth" ]
 
 # Declarative metafield definitions for rider_profile namespace (CUSTOMER owner).
 # access.customer_account = "read_write" allows customers to view and edit via the extension.
 # access.customer_account = "read" is read-only for customers.
 # Fields with no access.customer_account are admin-only (not visible to customers).
+
+[customer.metafields.rider_profile.emergency_contact_name]
+type = "single_line_text_field"
+name = "Emergency Contact Name"
+description = "Name of the customer's emergency contact."
+access.customer_account = "read_write"
 
 [customer.metafields.rider_profile.skill_level]
 type = "single_line_text_field"
@@ -133,7 +141,7 @@ access.customer_account = "read_write"
 [order.metafields.andes_freeride.booking_status]
 type = "single_line_text_field"
 name = "Booking status"
-description = "Booking coordination: pending, under_review, confirmed, needs_attention"
+description = "Booking coordination lifecycle: pending_dates, dates_requested, dates_under_review, dates_confirmed, changes_requested, cancelled, completed"
 access.admin = "merchant_read_write"
 access.customer_account = "read"
 
@@ -147,6 +155,48 @@ access.customer_account = "read"
 [order.metafields.andes_freeride.payment_status]
 type = "single_line_text_field"
 name = "Payment status"
-description = "Simple payment line: pending, authorized, paid, action_required"
+description = "Deposit-aware payment lifecycle: deposit_pending, deposit_paid, balance_due, paid, action_required, refunded"
+access.admin = "merchant_read_write"
+access.customer_account = "read"
+
+[order.metafields.andes_freeride.balance_due_date]
+type = "date"
+name = "Balance due date"
+description = "Date when the remaining booking balance is due"
+access.admin = "merchant_read_write"
+access.customer_account = "read"
+
+[order.metafields.andes_freeride.payment_note]
+type = "multi_line_text_field"
+name = "Payment note"
+description = "Customer-visible payment coordination note"
+access.admin = "merchant_read_write"
+access.customer_account = "read"
+
+[order.metafields.andes_freeride.tentative_start_date]
+type = "date"
+name = "Tentative start date"
+description = "Tentative booking start date"
+access.admin = "merchant_read_write"
+access.customer_account = "read"
+
+[order.metafields.andes_freeride.tentative_end_date]
+type = "date"
+name = "Tentative end date"
+description = "Tentative booking end date"
+access.admin = "merchant_read_write"
+access.customer_account = "read"
+
+[order.metafields.andes_freeride.confirmed_start_date]
+type = "date"
+name = "Confirmed start date"
+description = "Confirmed booking start date"
+access.admin = "merchant_read_write"
+access.customer_account = "read"
+
+[order.metafields.andes_freeride.confirmed_end_date]
+type = "date"
+name = "Confirmed end date"
+description = "Confirmed booking end date"
 access.admin = "merchant_read_write"
 access.customer_account = "read"

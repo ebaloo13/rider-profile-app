@@ -5,8 +5,17 @@
     "loadingOrder": "Chargement de la commande…",
     "empty": "Les détails de votre réservation apparaîtront ici une fois que notre équipe les aura mis à jour pour cette commande. Pour toute question, répondez à l’e-mail de confirmation de commande.",
     "bookingLabel": "Statut de réservation",
-    "noteLabel": "Message de notre équipe",
+    "noteLabel": "Message de réservation client",
     "paymentLabel": "Paiement",
+    "balanceDueDateLabel": "Date d’échéance du solde",
+    "paymentNoteLabel": "Note de paiement client",
+    "tentativeDatesLabel": "Dates provisoires",
+    "dateRangeSeparator": "au",
+    "tentativeStartDateLabel": "Date de début provisoire",
+    "tentativeEndDateLabel": "Date de fin provisoire",
+    "confirmedDatesLabel": "Dates confirmées",
+    "confirmedStartDateLabel": "Date de début confirmée",
+    "confirmedEndDateLabel": "Date de fin confirmée",
     "noteFallback": "Pas de détail supplémentaire pour le moment."
   }
 }

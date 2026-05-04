@@ -11,6 +11,8 @@ import {
   EMPTY_BOOKING_COORDINATION,
   PAYMENT_STATUS_LABELS,
   PAYMENT_STATUS_VALUES,
+  normalizeBookingStatus,
+  normalizePaymentStatus,
   type BookingCoordinationFieldKey,
   type BookingCoordinationForm,
 } from "../lib/booking-coordination-fields";
@@ -37,6 +39,77 @@ function formatOrderDate(iso: string): string {
   } catch {
     return iso;
   }
+}
+
+function BookingDateInput({
+  id,
+  label,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div>
+      <label htmlFor={id}>{label}</label>
+      <input
+        id={id}
+        type="date"
+        value={value}
+        onChange={(e) => onChange(e.currentTarget.value)}
+      />
+    </div>
+  );
+}
+
+function getBookingCoordinationWarnings(
+  booking: BookingCoordinationForm,
+): string[] {
+  const warnings: string[] = [];
+  const bookingStatus =
+    normalizeBookingStatus(booking.booking_status) || booking.booking_status;
+  const paymentStatus =
+    normalizePaymentStatus(booking.payment_status) || booking.payment_status;
+  const hasConfirmedStart = booking.confirmed_start_date.trim() !== "";
+  const hasConfirmedEnd = booking.confirmed_end_date.trim() !== "";
+  const hasConfirmedDate = hasConfirmedStart || hasConfirmedEnd;
+  const hasCompleteConfirmedRange = hasConfirmedStart && hasConfirmedEnd;
+
+  if (bookingStatus === "dates_confirmed" && !hasCompleteConfirmedRange) {
+    warnings.push(
+      "Booking status is Dates confirmed, but one or both confirmed dates are missing.",
+    );
+  }
+
+  if (bookingStatus === "pending_dates" && hasConfirmedDate) {
+    warnings.push(
+      "Booking status is Pending dates, but confirmed dates are already set.",
+    );
+  }
+
+  if (
+    paymentStatus === "balance_due" &&
+    booking.balance_due_date.trim() === ""
+  ) {
+    warnings.push(
+      "Payment status is Balance due, but the balance due date is missing.",
+    );
+  }
+
+  if (bookingStatus === "cancelled" && paymentStatus === "paid") {
+    warnings.push("Booking is Cancelled, but payment status is Paid.");
+  }
+
+  if (bookingStatus === "completed" && !hasCompleteConfirmedRange) {
+    warnings.push(
+      "Booking status is Completed, but one or both confirmed dates are missing.",
+    );
+  }
+
+  return warnings;
 }
 
 const SEARCH_ORDERS = `#graphql
@@ -66,7 +139,7 @@ const GET_ORDER_BOOKING = `#graphql
       customer {
         displayName
       }
-      bookingMf: metafields(first: 10, namespace: "${BOOKING_COORDINATION_NAMESPACE}") {
+      bookingMf: metafields(first: 20, namespace: "${BOOKING_COORDINATION_NAMESPACE}") {
         edges {
           node {
             key
@@ -176,7 +249,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     for (const edge of mfEdges) {
       const { key, value } = edge.node as { key: string; value: string };
       if ((BOOKING_COORDINATION_KEYS as readonly string[]).includes(key)) {
-        booking[key as BookingCoordinationFieldKey] = value ?? "";
+        booking[key as BookingCoordinationFieldKey] =
+          key === "booking_status"
+            ? normalizeBookingStatus(value ?? "") || (value ?? "")
+            : key === "payment_status"
+              ? normalizePaymentStatus(value ?? "") || (value ?? "")
+            : value ?? "";
       }
     }
 
@@ -408,6 +486,10 @@ export default function BookingCoordination() {
     );
   };
 
+  const adminWarnings = selectedOrder
+    ? getBookingCoordinationWarnings(booking)
+    : [];
+
   if (selectedOrder) {
     return (
       <s-page heading="Booking coordination">
@@ -481,50 +563,143 @@ export default function BookingCoordination() {
                   for customers).
                 </s-text>
               </s-paragraph>
-              <s-select
-                label="Booking status"
-                value={booking.booking_status}
-                onChange={(e) =>
-                  updateBookingField(
-                    "booking_status",
-                    e.currentTarget.value ?? "",
-                  )
-                }
-              >
-                <s-option value="">— Select —</s-option>
-                {BOOKING_STATUS_VALUES.map((v) => (
-                  <s-option key={v} value={v}>
-                    {BOOKING_STATUS_LABELS[v]}
-                  </s-option>
-                ))}
-              </s-select>
-              <s-text-field
-                label="Booking status note"
-                value={booking.booking_status_note}
-                onChange={(e) =>
-                  updateBookingField(
-                    "booking_status_note",
-                    e.currentTarget.value ?? "",
-                  )
-                }
-              />
-              <s-select
-                label="Payment status"
-                value={booking.payment_status}
-                onChange={(e) =>
-                  updateBookingField(
-                    "payment_status",
-                    e.currentTarget.value ?? "",
-                  )
-                }
-              >
-                <s-option value="">— Select —</s-option>
-                {PAYMENT_STATUS_VALUES.map((v) => (
-                  <s-option key={v} value={v}>
-                    {PAYMENT_STATUS_LABELS[v]}
-                  </s-option>
-                ))}
-              </s-select>
+              {adminWarnings.length > 0 && (
+                <s-box
+                  padding="base"
+                  borderWidth="base"
+                  borderRadius="base"
+                  background="subdued"
+                >
+                  <s-stack direction="block" gap="small">
+                    <s-heading>Review before saving</s-heading>
+                    {adminWarnings.map((warning) => (
+                      <s-paragraph key={warning}>
+                        <s-text>{warning}</s-text>
+                      </s-paragraph>
+                    ))}
+                  </s-stack>
+                </s-box>
+              )}
+              <s-box padding="base" borderWidth="base" borderRadius="base">
+                <s-stack direction="block" gap="base">
+                  <s-heading>Booking status</s-heading>
+                  <s-select
+                    label="Booking status"
+                    value={booking.booking_status}
+                    onChange={(e) =>
+                      updateBookingField(
+                        "booking_status",
+                        e.currentTarget.value ?? "",
+                      )
+                    }
+                  >
+                    <s-option value="">— Select —</s-option>
+                    {BOOKING_STATUS_VALUES.map((v) => (
+                      <s-option key={v} value={v}>
+                        {BOOKING_STATUS_LABELS[v]}
+                      </s-option>
+                    ))}
+                  </s-select>
+                  <s-text-field
+                    label="Customer booking message"
+                    value={booking.booking_status_note}
+                    onChange={(e) =>
+                      updateBookingField(
+                        "booking_status_note",
+                        e.currentTarget.value ?? "",
+                      )
+                    }
+                  />
+                  <s-paragraph>
+                    <s-text color="subdued">
+                      Visible to the customer on their order status page.
+                    </s-text>
+                  </s-paragraph>
+                </s-stack>
+              </s-box>
+              <s-box padding="base" borderWidth="base" borderRadius="base">
+                <s-stack direction="block" gap="base">
+                  <s-heading>Trip dates</s-heading>
+                  <BookingDateInput
+                    id="tentative-start-date"
+                    label="Tentative start date"
+                    value={booking.tentative_start_date}
+                    onChange={(value) =>
+                      updateBookingField("tentative_start_date", value)
+                    }
+                  />
+                  <BookingDateInput
+                    id="tentative-end-date"
+                    label="Tentative end date"
+                    value={booking.tentative_end_date}
+                    onChange={(value) =>
+                      updateBookingField("tentative_end_date", value)
+                    }
+                  />
+                  <BookingDateInput
+                    id="confirmed-start-date"
+                    label="Confirmed start date"
+                    value={booking.confirmed_start_date}
+                    onChange={(value) =>
+                      updateBookingField("confirmed_start_date", value)
+                    }
+                  />
+                  <BookingDateInput
+                    id="confirmed-end-date"
+                    label="Confirmed end date"
+                    value={booking.confirmed_end_date}
+                    onChange={(value) =>
+                      updateBookingField("confirmed_end_date", value)
+                    }
+                  />
+                </s-stack>
+              </s-box>
+              <s-box padding="base" borderWidth="base" borderRadius="base">
+                <s-stack direction="block" gap="base">
+                  <s-heading>Payment coordination</s-heading>
+                  <s-select
+                    label="Payment status"
+                    value={booking.payment_status}
+                    onChange={(e) =>
+                      updateBookingField(
+                        "payment_status",
+                        e.currentTarget.value ?? "",
+                      )
+                    }
+                  >
+                    <s-option value="">— Select —</s-option>
+                    {PAYMENT_STATUS_VALUES.map((v) => (
+                      <s-option key={v} value={v}>
+                        {PAYMENT_STATUS_LABELS[v]}
+                      </s-option>
+                    ))}
+                  </s-select>
+                  <BookingDateInput
+                    id="balance-due-date"
+                    label="Balance due date"
+                    value={booking.balance_due_date}
+                    onChange={(value) =>
+                      updateBookingField("balance_due_date", value)
+                    }
+                  />
+                  <s-text-area
+                    label="Customer payment note"
+                    value={booking.payment_note}
+                    onChange={(e) =>
+                      updateBookingField(
+                        "payment_note",
+                        e.currentTarget.value ?? "",
+                      )
+                    }
+                    rows={3}
+                  />
+                  <s-paragraph>
+                    <s-text color="subdued">
+                      Visible to the customer on their order status page.
+                    </s-text>
+                  </s-paragraph>
+                </s-stack>
+              </s-box>
             </s-stack>
           </s-section>
         )}

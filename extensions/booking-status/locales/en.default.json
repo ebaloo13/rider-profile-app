@@ -5,8 +5,17 @@
     "loadingOrder": "Loading order…",
     "empty": "Your booking details will appear here once our team has updated them for this order. If you have questions, reply to your order confirmation email.",
     "bookingLabel": "Booking status",
-    "noteLabel": "Message from our team",
+    "noteLabel": "Customer booking message",
     "paymentLabel": "Payment",
+    "balanceDueDateLabel": "Balance due date",
+    "paymentNoteLabel": "Customer payment note",
+    "tentativeDatesLabel": "Tentative dates",
+    "dateRangeSeparator": "to",
+    "tentativeStartDateLabel": "Tentative start date",
+    "tentativeEndDateLabel": "Tentative end date",
+    "confirmedDatesLabel": "Confirmed dates",
+    "confirmedStartDateLabel": "Confirmed start date",
+    "confirmedEndDateLabel": "Confirmed end date",
     "noteFallback": "No additional details yet."
   }
 }

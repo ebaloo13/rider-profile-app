@@ -5,6 +5,8 @@ import { useApi, useOrder } from '@shopify/ui-extensions/customer-account/preact
 import {
   bookingStatusDisplayLabel,
   customerAccountOrderBookingCoordinationQueryDocument,
+  getBookingStatusTone,
+  getPaymentStatusTone,
   paymentStatusDisplayLabel,
   BOOKING_COORDINATION_KEYS,
 } from '../../../app/lib/booking-coordination-fields';
@@ -28,11 +30,23 @@ function isEmptyBookingCoordination(m) {
   );
 }
 
-function bookingStatusTone(raw) {
-  const v = String(raw ?? '').trim();
-  if (v === 'confirmed') return 'success';
-  if (v === 'needs_attention') return 'critical';
-  return 'subdued';
+function formatBookingDate(raw, i18n) {
+  const value = String(raw ?? '').trim();
+  if (!value) return '';
+  try {
+    const [year, month, day] = value.split('-').map(Number);
+    if (!year || !month || !day) return value;
+    return i18n.formatDate(new Date(year, month - 1, day));
+  } catch {
+    return value;
+  }
+}
+
+function formatDateRange(start, end, i18n) {
+  if (start && end) {
+    return `${start} ${i18n.translate('booking.dateRangeSeparator')} ${end}`;
+  }
+  return start || end || '';
 }
 
 async function fetchBookingCoordination(orderId) {
@@ -127,6 +141,22 @@ function OrderStatusBlock() {
   const bookingLabel = bookingStatusDisplayLabel(mf.booking_status ?? '');
   const paymentLabel = paymentStatusDisplayLabel(mf.payment_status ?? '');
   const noteRaw = String(mf.booking_status_note ?? '').trim();
+  const paymentNoteRaw = String(mf.payment_note ?? '').trim();
+  const balanceDueDate = formatBookingDate(mf.balance_due_date, i18n);
+  const tentativeStartDate = formatBookingDate(mf.tentative_start_date, i18n);
+  const tentativeEndDate = formatBookingDate(mf.tentative_end_date, i18n);
+  const confirmedStartDate = formatBookingDate(mf.confirmed_start_date, i18n);
+  const confirmedEndDate = formatBookingDate(mf.confirmed_end_date, i18n);
+  const tentativeDates = formatDateRange(
+    tentativeStartDate,
+    tentativeEndDate,
+    i18n,
+  );
+  const confirmedDates = formatDateRange(
+    confirmedStartDate,
+    confirmedEndDate,
+    i18n,
+  );
 
   return (
     <s-section heading={i18n.translate('booking.heading')}>
@@ -134,21 +164,47 @@ function OrderStatusBlock() {
         {bookingLabel ? (
           <s-stack direction="block" gap="small">
             <s-text type="strong">{i18n.translate('booking.bookingLabel')}</s-text>
-            <s-text color={bookingStatusTone(mf.booking_status)}>
+            <s-text color={getBookingStatusTone(mf.booking_status)}>
               {bookingLabel}
             </s-text>
           </s-stack>
         ) : null}
-        <s-stack direction="block" gap="small">
-          <s-text type="strong">{i18n.translate('booking.noteLabel')}</s-text>
-          <s-text color="subdued">
-            {noteRaw || i18n.translate('booking.noteFallback')}
-          </s-text>
-        </s-stack>
+        {tentativeDates ? (
+          <s-stack direction="block" gap="small">
+            <s-text type="strong">{i18n.translate('booking.tentativeDatesLabel')}</s-text>
+            <s-text>{tentativeDates}</s-text>
+          </s-stack>
+        ) : null}
+        {confirmedDates ? (
+          <s-stack direction="block" gap="small">
+            <s-text type="strong">{i18n.translate('booking.confirmedDatesLabel')}</s-text>
+            <s-text>{confirmedDates}</s-text>
+          </s-stack>
+        ) : null}
+        {noteRaw ? (
+          <s-stack direction="block" gap="small">
+            <s-text type="strong">{i18n.translate('booking.noteLabel')}</s-text>
+            <s-text color="subdued">{noteRaw}</s-text>
+          </s-stack>
+        ) : null}
         {paymentLabel ? (
           <s-stack direction="block" gap="small">
             <s-text type="strong">{i18n.translate('booking.paymentLabel')}</s-text>
-            <s-text>{paymentLabel}</s-text>
+            <s-text color={getPaymentStatusTone(mf.payment_status)}>
+              {paymentLabel}
+            </s-text>
+          </s-stack>
+        ) : null}
+        {balanceDueDate ? (
+          <s-stack direction="block" gap="small">
+            <s-text type="strong">{i18n.translate('booking.balanceDueDateLabel')}</s-text>
+            <s-text>{balanceDueDate}</s-text>
+          </s-stack>
+        ) : null}
+        {paymentNoteRaw ? (
+          <s-stack direction="block" gap="small">
+            <s-text type="strong">{i18n.translate('booking.paymentNoteLabel')}</s-text>
+            <s-text color="subdued">{paymentNoteRaw}</s-text>
           </s-stack>
         ) : null}
       </s-stack>

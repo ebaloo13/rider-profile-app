@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import '@shopify/ui-extensions/preact';
 import { render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
@@ -19,6 +20,15 @@ const METAFIELD_TYPE_BY_KEY = new Map(
 const VIEW_GRID_FIELDS = CUSTOMER_ACCOUNT_PROFILE_FIELDS.filter((f) => f.key !== 'notes');
 
 const EDITABLE_FIELD_KEYS = CUSTOMER_ACCOUNT_PROFILE_FIELDS.map((f) => f.key);
+
+/** @param {Event} e */
+function targetStringValue(e) {
+  const t = e.currentTarget;
+  if (t && typeof t === "object" && "value" in t && t.value != null) {
+    return String(t.value);
+  }
+  return "";
+}
 
 function isFieldComplete(value) {
   if (value === undefined || value === null) return false;
@@ -104,7 +114,7 @@ function CustomerAccountFieldInput({ field, i18n, editValues, updateEdit }) {
       <s-select
         label={i18n.translate(labelKey)}
         value={value}
-        onChange={(e) => updateEdit(field.key, e.currentTarget.value ?? '')}
+        onChange={(e) => updateEdit(field.key, targetStringValue(e))}
       >
         <s-option value="">{i18n.translate('selectPlaceholder')}</s-option>
         {ui.options.map((opt) => (
@@ -121,7 +131,7 @@ function CustomerAccountFieldInput({ field, i18n, editValues, updateEdit }) {
       <s-text-field
         label={i18n.translate(labelKey)}
         value={value}
-        onChange={(e) => updateEdit(field.key, e.currentTarget.value ?? '')}
+        onChange={(e) => updateEdit(field.key, targetStringValue(e))}
       />
     );
   }
@@ -131,7 +141,7 @@ function CustomerAccountFieldInput({ field, i18n, editValues, updateEdit }) {
       <s-number-field
         label={i18n.translate(labelKey)}
         value={value}
-        onChange={(e) => updateEdit(field.key, e.currentTarget.value ?? '')}
+        onChange={(e) => updateEdit(field.key, targetStringValue(e))}
         min={ui.min}
         max={ui.max}
       />
@@ -144,19 +154,8 @@ function CustomerAccountFieldInput({ field, i18n, editValues, updateEdit }) {
       <s-text-area
         label={i18n.translate(labelKey)}
         value={value}
-        onChange={(e) => updateEdit(field.key, e.currentTarget.value ?? '')}
+        onChange={(e) => updateEdit(field.key, targetStringValue(e))}
         rows={rows}
-      />
-    );
-  }
-
-  if (ui.kind === 'boolean') {
-    const checked = value === true || value === 'true' || value === '1';
-    return (
-      <s-checkbox
-        label={i18n.translate(labelKey)}
-        checked={checked}
-        onChange={(e) => updateEdit(field.key, e.currentTarget.checked ? 'true' : '')}
       />
     );
   }
@@ -176,6 +175,7 @@ async function fetchProfile() {
   const { data } = await res.json();
   const customerId = data?.customer?.id;
   const metafields = data?.customer?.metafields ?? [];
+  /** @type {Record<string, string>} */
   const profile = {};
   let hasData = false;
 
@@ -222,13 +222,6 @@ function collectFieldsToSave(editValues) {
   const fields = [];
   for (const field of CUSTOMER_ACCOUNT_PROFILE_FIELDS) {
     const v = editValues[field.key];
-    if (field.ui.kind === 'boolean') {
-      fields.push({
-        key: field.key,
-        value: v === true || v === 'true' ? 'true' : 'false',
-      });
-      continue;
-    }
     if (v !== undefined && v !== '') {
       fields.push({ key: field.key, value: String(v) });
     }
@@ -258,8 +251,12 @@ export default async () => {
 function ProfileBlockExtension() {
   const i18n = shopify.i18n;
   const [customerId, setCustomerId] = useState(null);
-  const [profile, setProfile] = useState({});
-  const [editValues, setEditValues] = useState({});
+  const [profile, setProfile] = useState(
+    /** @type {Record<string, string>} */ ({}),
+  );
+  const [editValues, setEditValues] = useState(
+    /** @type {Record<string, string>} */ ({}),
+  );
   const [hasData, setHasData] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -286,6 +283,7 @@ function ProfileBlockExtension() {
   };
 
   const startEdit = () => {
+    /** @type {Record<string, string>} */
     const initial = {};
     for (const field of CUSTOMER_ACCOUNT_PROFILE_FIELDS) {
       initial[field.key] = profile[field.key] ?? '';
@@ -395,14 +393,14 @@ function ProfileBlockExtension() {
           ))}
 
           {saveMessage?.type === 'error' && (
-            <s-text color="critical">{saveMessage.text}</s-text>
+            <s-text type="strong">{saveMessage.text}</s-text>
           )}
 
           <s-stack direction="inline" gap="base">
             <s-button onClick={handleSave} disabled={saving}>
               {saving ? i18n.translate('saving') : i18n.translate('saveProfile')}
             </s-button>
-            <s-button onClick={cancelEdit} kind="secondary">
+            <s-button onClick={cancelEdit} variant="secondary">
               {i18n.translate('cancel')}
             </s-button>
           </s-stack>
@@ -419,7 +417,7 @@ function ProfileBlockExtension() {
     <s-section heading={i18n.translate('heading')}>
       <s-stack direction="block" gap="base">
         {saveMessage?.type === 'success' && (
-          <s-text color="success">{saveMessage.text}</s-text>
+          <s-text type="strong">{saveMessage.text}</s-text>
         )}
         <CompletionStatus i18n={i18n} percent={pctView} />
         <RiderSummaryCard i18n={i18n} profile={profile} />

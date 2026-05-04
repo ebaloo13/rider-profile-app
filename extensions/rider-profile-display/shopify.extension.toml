@@ -6,9 +6,12 @@ handle = "rider-profile-display"
 type = "ui_extension"
 uid = "844cf80f-9470-ea22-c28a-8b32a7eadd0ba37d8a8d"
 
+# Default below native Profile (name, email, addresses). Merchants can still move the block.
+# Placements: PAGE_TITLE, PROFILE1, PROFILE2 — see https://shopify.dev/docs/apps/build/customer-accounts/extension-placement
 [[extensions.targeting]]
 module = "./src/ProfileBlockExtension.jsx"
 target = "customer-account.profile.block.render"
+default_placement = "PROFILE2"
 
 [[extensions.targeting]]
 module = "./src/OrderWaiverBlock.jsx"
