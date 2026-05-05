@@ -43,7 +43,7 @@ function formatOrderDate(iso: string): string {
 }
 
 const SEARCH_DEBOUNCE_MS = 400;
-const MIN_TYPEAHEAD_QUERY_LENGTH = 3;
+const MIN_TYPEAHEAD_QUERY_LENGTH = 2;
 
 function BookingDateInput({
   id,
@@ -460,6 +460,7 @@ export default function BookingCoordination() {
 
   const orders = fetcher.data?.orders ?? [];
   const searchPerformed = fetcher.data?.searchPerformed ?? false;
+  const trimmedSearchQuery = searchQuery.trim();
 
   const handleSearch = () => {
     const trimmed = searchQuery.trim();
@@ -762,7 +763,7 @@ export default function BookingCoordination() {
               label="Search orders"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.currentTarget.value ?? "")}
-              details="Type at least 3 characters to search by order number, customer name, or email."
+              details="Type at least 2 characters to see order suggestions."
             />
             <s-button
               onClick={handleSearch}
@@ -771,65 +772,71 @@ export default function BookingCoordination() {
               Search
             </s-button>
           </s-stack>
+          {trimmedSearchQuery.length < MIN_TYPEAHEAD_QUERY_LENGTH &&
+            !isSearching && (
+              <s-paragraph>
+                <s-text color="subdued">
+                  Type at least 2 characters to see order suggestions.
+                </s-text>
+              </s-paragraph>
+            )}
           {isSearching && (
             <s-paragraph>
               <s-text color="subdued">Searching orders…</s-text>
             </s-paragraph>
           )}
+          {searchPerformed && orders.length === 0 && !isSearching && (
+            <s-box padding="base" borderWidth="base" borderRadius="base">
+              <s-paragraph>No orders found. Try a different search.</s-paragraph>
+            </s-box>
+          )}
+          {orders.length > 0 && (
+            <s-box padding="base" borderWidth="base" borderRadius="base">
+              <s-stack direction="block" gap="base">
+                <s-paragraph>
+                  <s-text color="subdued">Showing up to 10 orders.</s-text>
+                </s-paragraph>
+                {orders.map((order) => (
+                  <s-box
+                    key={order.id}
+                    padding="base"
+                    borderWidth="base"
+                    borderRadius="base"
+                  >
+                    <s-stack direction="inline" gap="base">
+                      <s-stack direction="block" gap="base">
+                        <s-paragraph>
+                          <s-text>{order.name}</s-text>
+                        </s-paragraph>
+                        <s-paragraph>
+                          <s-text color="subdued">
+                            {formatOrderDate(order.createdAt)}
+                            {order.customerDisplayName
+                              ? ` · ${order.customerDisplayName}`
+                              : ""}
+                          </s-text>
+                        </s-paragraph>
+                        {order.customerEmail && (
+                          <s-paragraph>
+                            <s-text color="subdued">{order.customerEmail}</s-text>
+                          </s-paragraph>
+                        )}
+                      </s-stack>
+                      <s-button
+                        onClick={() => handleSelectOrder(order)}
+                        variant="tertiary"
+                        {...(isLoading ? { loading: true } : {})}
+                      >
+                        Select
+                      </s-button>
+                    </s-stack>
+                  </s-box>
+                ))}
+              </s-stack>
+            </s-box>
+          )}
         </s-stack>
       </s-section>
-
-      {searchPerformed && orders.length === 0 && !isSearching && (
-        <s-section heading="Results">
-          <s-paragraph>No orders found. Try a different search.</s-paragraph>
-        </s-section>
-      )}
-
-      {orders.length > 0 && (
-        <s-section heading="Results">
-          <s-stack direction="block" gap="base">
-            <s-paragraph>
-              <s-text color="subdued">Showing up to 10 orders.</s-text>
-            </s-paragraph>
-            {orders.map((order) => (
-              <s-box
-                key={order.id}
-                padding="base"
-                borderWidth="base"
-                borderRadius="base"
-              >
-                <s-stack direction="inline" gap="base">
-                  <s-stack direction="block" gap="base">
-                    <s-paragraph>
-                      <s-text>{order.name}</s-text>
-                    </s-paragraph>
-                    <s-paragraph>
-                      <s-text color="subdued">
-                        {formatOrderDate(order.createdAt)}
-                        {order.customerDisplayName
-                          ? ` · ${order.customerDisplayName}`
-                          : ""}
-                      </s-text>
-                    </s-paragraph>
-                    {order.customerEmail && (
-                      <s-paragraph>
-                        <s-text color="subdued">{order.customerEmail}</s-text>
-                      </s-paragraph>
-                    )}
-                  </s-stack>
-                  <s-button
-                    onClick={() => handleSelectOrder(order)}
-                    variant="tertiary"
-                    {...(isLoading ? { loading: true } : {})}
-                  >
-                    Select
-                  </s-button>
-                </s-stack>
-              </s-box>
-            ))}
-          </s-stack>
-        </s-section>
-      )}
     </s-page>
   );
 }

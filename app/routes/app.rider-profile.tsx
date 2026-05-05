@@ -93,7 +93,7 @@ function formatLocation(address: Customer["defaultAddress"]): string | null {
 }
 
 const SEARCH_DEBOUNCE_MS = 400;
-const MIN_TYPEAHEAD_QUERY_LENGTH = 3;
+const MIN_TYPEAHEAD_QUERY_LENGTH = 2;
 
 function adminCustomerUrl(gid: string): string {
   return `shopify:admin/customers/${gid.split("/").pop()}`;
@@ -387,6 +387,7 @@ export default function RiderProfile() {
 
   const customers = fetcher.data?.customers ?? [];
   const searchPerformed = fetcher.data?.searchPerformed ?? false;
+  const trimmedSearchQuery = searchQuery.trim();
 
   const handleSearch = () => {
     const trimmed = searchQuery.trim();
@@ -674,7 +675,7 @@ export default function RiderProfile() {
               label="Search by name or email"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.currentTarget.value ?? "")}
-              details="Type at least 3 characters to search."
+              details="Type at least 2 characters to see suggestions."
             ></s-text-field>
             <s-button
               onClick={handleSearch}
@@ -683,68 +684,74 @@ export default function RiderProfile() {
               Search
             </s-button>
           </s-stack>
+          {trimmedSearchQuery.length < MIN_TYPEAHEAD_QUERY_LENGTH &&
+            !isSearching && (
+              <s-paragraph>
+                <s-text color="subdued">
+                  Type at least 2 characters to see suggestions.
+                </s-text>
+              </s-paragraph>
+            )}
           {isSearching && (
             <s-paragraph>
               <s-text color="subdued">Searching customers…</s-text>
             </s-paragraph>
           )}
+          {searchPerformed && customers.length === 0 && !isSearching && (
+            <s-box padding="base" borderWidth="base" borderRadius="base">
+              <s-paragraph>No customers found. Try a different search.</s-paragraph>
+            </s-box>
+          )}
+          {customers.length > 0 && (
+            <s-box padding="base" borderWidth="base" borderRadius="base">
+              <s-stack direction="block" gap="base">
+                <s-paragraph>
+                  <s-text color="subdued">Showing up to 10 customers.</s-text>
+                </s-paragraph>
+                {customers.map((customer) => (
+                  <s-box
+                    key={customer.id}
+                    padding="base"
+                    borderWidth="base"
+                    borderRadius="base"
+                  >
+                    <s-stack direction="inline" gap="base">
+                      <s-stack direction="block" gap="base">
+                        <s-paragraph>
+                          <s-text>{customer.displayName}</s-text>
+                        </s-paragraph>
+                        {customer.email && (
+                          <s-paragraph>
+                            <s-text>{customer.email}</s-text>
+                          </s-paragraph>
+                        )}
+                        {customer.phone && (
+                          <s-paragraph>
+                            <s-text color="subdued">{customer.phone}</s-text>
+                          </s-paragraph>
+                        )}
+                        {formatLocation(customer.defaultAddress) && (
+                          <s-paragraph>
+                            <s-text color="subdued">
+                              {formatLocation(customer.defaultAddress)}
+                            </s-text>
+                          </s-paragraph>
+                        )}
+                      </s-stack>
+                      <s-button
+                        onClick={() => handleSelectCustomer(customer)}
+                        variant="tertiary"
+                      >
+                        Select
+                      </s-button>
+                    </s-stack>
+                  </s-box>
+                ))}
+              </s-stack>
+            </s-box>
+          )}
         </s-stack>
       </s-section>
-
-      {searchPerformed && customers.length === 0 && !isSearching && (
-        <s-section heading="Results">
-          <s-paragraph>No customers found. Try a different search.</s-paragraph>
-        </s-section>
-      )}
-
-      {customers.length > 0 && (
-        <s-section heading="Results">
-          <s-stack direction="block" gap="base">
-            <s-paragraph>
-              <s-text color="subdued">Showing up to 10 customers.</s-text>
-            </s-paragraph>
-            {customers.map((customer) => (
-              <s-box
-                key={customer.id}
-                padding="base"
-                borderWidth="base"
-                borderRadius="base"
-              >
-                <s-stack direction="inline" gap="base">
-                  <s-stack direction="block" gap="base">
-                    <s-paragraph>
-                      <s-text>{customer.displayName}</s-text>
-                    </s-paragraph>
-                    {customer.email && (
-                      <s-paragraph>
-                        <s-text>{customer.email}</s-text>
-                      </s-paragraph>
-                    )}
-                    {customer.phone && (
-                      <s-paragraph>
-                        <s-text color="subdued">{customer.phone}</s-text>
-                      </s-paragraph>
-                    )}
-                    {formatLocation(customer.defaultAddress) && (
-                      <s-paragraph>
-                        <s-text color="subdued">
-                          {formatLocation(customer.defaultAddress)}
-                        </s-text>
-                      </s-paragraph>
-                    )}
-                  </s-stack>
-                  <s-button
-                    onClick={() => handleSelectCustomer(customer)}
-                    variant="tertiary"
-                  >
-                    Select
-                  </s-button>
-                </s-stack>
-              </s-box>
-            ))}
-          </s-stack>
-        </s-section>
-      )}
     </s-page>
   );
 }
