@@ -388,6 +388,7 @@ export default function RiderProfile() {
   const customers = fetcher.data?.customers ?? [];
   const searchPerformed = fetcher.data?.searchPerformed ?? false;
   const trimmedSearchQuery = searchQuery.trim();
+  const customerSuggestions = customers.slice(0, 5);
 
   const handleSearch = () => {
     const trimmed = searchQuery.trim();
@@ -670,20 +671,12 @@ export default function RiderProfile() {
     <s-page heading="Rider Profile">
       <s-section heading="Find a Customer">
         <s-stack direction="block" gap="base">
-          <s-stack direction="inline" gap="base">
-            <s-text-field
-              label="Search by name or email"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.currentTarget.value ?? "")}
-              details="Type at least 2 characters to see suggestions."
-            ></s-text-field>
-            <s-button
-              onClick={handleSearch}
-              {...(isSearching ? { loading: true } : {})}
-            >
-              Search
-            </s-button>
-          </s-stack>
+          <s-text-field
+            label="Search by name or email"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.currentTarget.value ?? "")}
+            details="Type at least 2 characters to see suggestions."
+          ></s-text-field>
           {trimmedSearchQuery.length < MIN_TYPEAHEAD_QUERY_LENGTH &&
             !isSearching && (
               <s-paragraph>
@@ -702,54 +695,40 @@ export default function RiderProfile() {
               <s-paragraph>No customers found. Try a different search.</s-paragraph>
             </s-box>
           )}
-          {customers.length > 0 && (
-            <s-box padding="base" borderWidth="base" borderRadius="base">
-              <s-stack direction="block" gap="base">
-                <s-paragraph>
-                  <s-text color="subdued">Showing up to 10 customers.</s-text>
-                </s-paragraph>
-                {customers.map((customer) => (
-                  <s-box
+          {customerSuggestions.length > 0 && (
+            <s-box padding="small" borderWidth="base" borderRadius="base">
+              <s-stack direction="block" gap="small">
+                {customerSuggestions.map((customer) => (
+                  <s-clickable
                     key={customer.id}
-                    padding="base"
+                    padding="small"
                     borderWidth="base"
-                    borderRadius="base"
+                    borderRadius="small"
+                    onClick={() => handleSelectCustomer(customer)}
                   >
-                    <s-stack direction="inline" gap="base">
-                      <s-stack direction="block" gap="base">
-                        <s-paragraph>
-                          <s-text>{customer.displayName}</s-text>
-                        </s-paragraph>
-                        {customer.email && (
-                          <s-paragraph>
-                            <s-text>{customer.email}</s-text>
-                          </s-paragraph>
-                        )}
-                        {customer.phone && (
-                          <s-paragraph>
-                            <s-text color="subdued">{customer.phone}</s-text>
-                          </s-paragraph>
-                        )}
-                        {formatLocation(customer.defaultAddress) && (
-                          <s-paragraph>
-                            <s-text color="subdued">
-                              {formatLocation(customer.defaultAddress)}
-                            </s-text>
-                          </s-paragraph>
-                        )}
-                      </s-stack>
-                      <s-button
-                        onClick={() => handleSelectCustomer(customer)}
-                        variant="tertiary"
-                      >
-                        Select
-                      </s-button>
+                    <s-stack direction="block" gap="small">
+                      <s-text>{customer.displayName}</s-text>
+                      {customer.email && <s-text>{customer.email}</s-text>}
+                      {customer.phone && (
+                        <s-text color="subdued">{customer.phone}</s-text>
+                      )}
+                      {formatLocation(customer.defaultAddress) && (
+                        <s-text color="subdued">
+                          {formatLocation(customer.defaultAddress)}
+                        </s-text>
+                      )}
                     </s-stack>
-                  </s-box>
+                  </s-clickable>
                 ))}
               </s-stack>
             </s-box>
           )}
+          <s-button
+            onClick={handleSearch}
+            {...(isSearching ? { loading: true } : {})}
+          >
+            Search
+          </s-button>
         </s-stack>
       </s-section>
     </s-page>

@@ -461,6 +461,7 @@ export default function BookingCoordination() {
   const orders = fetcher.data?.orders ?? [];
   const searchPerformed = fetcher.data?.searchPerformed ?? false;
   const trimmedSearchQuery = searchQuery.trim();
+  const orderSuggestions = orders.slice(0, 5);
 
   const handleSearch = () => {
     const trimmed = searchQuery.trim();
@@ -758,20 +759,12 @@ export default function BookingCoordination() {
               select an order to edit booking coordination for that order only.
             </s-text>
           </s-paragraph>
-          <s-stack direction="inline" gap="base">
-            <s-text-field
-              label="Search orders"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.currentTarget.value ?? "")}
-              details="Type at least 2 characters to see order suggestions."
-            />
-            <s-button
-              onClick={handleSearch}
-              {...(isSearching ? { loading: true } : {})}
-            >
-              Search
-            </s-button>
-          </s-stack>
+          <s-text-field
+            label="Search orders"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.currentTarget.value ?? "")}
+            details="Type at least 2 characters to see order suggestions."
+          />
           {trimmedSearchQuery.length < MIN_TYPEAHEAD_QUERY_LENGTH &&
             !isSearching && (
               <s-paragraph>
@@ -790,51 +783,40 @@ export default function BookingCoordination() {
               <s-paragraph>No orders found. Try a different search.</s-paragraph>
             </s-box>
           )}
-          {orders.length > 0 && (
-            <s-box padding="base" borderWidth="base" borderRadius="base">
-              <s-stack direction="block" gap="base">
-                <s-paragraph>
-                  <s-text color="subdued">Showing up to 10 orders.</s-text>
-                </s-paragraph>
-                {orders.map((order) => (
-                  <s-box
+          {orderSuggestions.length > 0 && (
+            <s-box padding="small" borderWidth="base" borderRadius="base">
+              <s-stack direction="block" gap="small">
+                {orderSuggestions.map((order) => (
+                  <s-clickable
                     key={order.id}
-                    padding="base"
+                    padding="small"
                     borderWidth="base"
-                    borderRadius="base"
+                    borderRadius="small"
+                    onClick={() => handleSelectOrder(order)}
                   >
-                    <s-stack direction="inline" gap="base">
-                      <s-stack direction="block" gap="base">
-                        <s-paragraph>
-                          <s-text>{order.name}</s-text>
-                        </s-paragraph>
-                        <s-paragraph>
-                          <s-text color="subdued">
-                            {formatOrderDate(order.createdAt)}
-                            {order.customerDisplayName
-                              ? ` · ${order.customerDisplayName}`
-                              : ""}
-                          </s-text>
-                        </s-paragraph>
-                        {order.customerEmail && (
-                          <s-paragraph>
-                            <s-text color="subdued">{order.customerEmail}</s-text>
-                          </s-paragraph>
-                        )}
-                      </s-stack>
-                      <s-button
-                        onClick={() => handleSelectOrder(order)}
-                        variant="tertiary"
-                        {...(isLoading ? { loading: true } : {})}
-                      >
-                        Select
-                      </s-button>
+                    <s-stack direction="block" gap="small">
+                      <s-text>{order.name}</s-text>
+                      <s-text color="subdued">
+                        {formatOrderDate(order.createdAt)}
+                        {order.customerDisplayName
+                          ? ` · ${order.customerDisplayName}`
+                          : ""}
+                      </s-text>
+                      {order.customerEmail && (
+                        <s-text color="subdued">{order.customerEmail}</s-text>
+                      )}
                     </s-stack>
-                  </s-box>
+                  </s-clickable>
                 ))}
               </s-stack>
             </s-box>
           )}
+          <s-button
+            onClick={handleSearch}
+            {...(isSearching ? { loading: true } : {})}
+          >
+            Search
+          </s-button>
         </s-stack>
       </s-section>
     </s-page>
