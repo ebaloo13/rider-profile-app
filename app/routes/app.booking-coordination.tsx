@@ -763,7 +763,6 @@ export default function BookingCoordination() {
             label="Search orders"
             value={searchQuery}
             onInput={(e) => setSearchQuery(e.currentTarget.value ?? "")}
-            details="Type at least 2 characters to see order suggestions."
           />
           {trimmedSearchQuery.length < MIN_TYPEAHEAD_QUERY_LENGTH &&
             !isSearching && (
