@@ -23,6 +23,7 @@ interface OrderSummary {
   name: string;
   createdAt: string;
   customerDisplayName: string | null;
+  customerEmail: string | null;
   processedAt?: string | null;
 }
 
@@ -40,6 +41,9 @@ function formatOrderDate(iso: string): string {
     return iso;
   }
 }
+
+const SEARCH_DEBOUNCE_MS = 400;
+const MIN_TYPEAHEAD_QUERY_LENGTH = 3;
 
 function BookingDateInput({
   id,
@@ -122,6 +126,7 @@ const SEARCH_ORDERS = `#graphql
           createdAt
           customer {
             displayName
+            email
           }
         }
       }
@@ -138,6 +143,7 @@ const GET_ORDER_BOOKING = `#graphql
       processedAt
       customer {
         displayName
+        email
       }
       bookingMf: metafields(first: 20, namespace: "${BOOKING_COORDINATION_NAMESPACE}") {
         edges {
@@ -207,13 +213,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           id: string;
           name: string;
           createdAt: string;
-          customer: { displayName: string | null } | null;
+          customer: { displayName: string | null; email: string | null } | null;
         };
       }) => ({
         id: edge.node.id,
         name: edge.node.name,
         createdAt: edge.node.createdAt,
         customerDisplayName: edge.node.customer?.displayName ?? null,
+        customerEmail: edge.node.customer?.email ?? null,
       }),
     );
 
@@ -265,6 +272,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       name: orderNode.name,
       createdAt: orderNode.createdAt,
       customerDisplayName: orderNode.customer?.displayName ?? null,
+      customerEmail: orderNode.customer?.email ?? null,
       processedAt: orderNode.processedAt ?? null,
     };
 
@@ -386,6 +394,7 @@ export default function BookingCoordination() {
   const [savedBooking, setSavedBooking] =
     useState<BookingCoordinationForm | null>(null);
   const [saveErrors, setSaveErrors] = useState<string[]>([]);
+  const [lastSearchQuery, setLastSearchQuery] = useState("");
 
   const updateBookingField = (
     key: BookingCoordinationFieldKey,
@@ -453,11 +462,29 @@ export default function BookingCoordination() {
   const searchPerformed = fetcher.data?.searchPerformed ?? false;
 
   const handleSearch = () => {
+    const trimmed = searchQuery.trim();
+    setLastSearchQuery(trimmed);
     fetcher.submit(
-      { intent: "search", query: searchQuery },
+      { intent: "search", query: trimmed },
       { method: "POST" },
     );
   };
+
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length < MIN_TYPEAHEAD_QUERY_LENGTH) return;
+    if (trimmed === lastSearchQuery) return;
+
+    const timer = window.setTimeout(() => {
+      setLastSearchQuery(trimmed);
+      fetcher.submit(
+        { intent: "search", query: trimmed },
+        { method: "POST" },
+      );
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [fetcher, lastSearchQuery, searchQuery]);
 
   const handleSelectOrder = (order: OrderSummary) => {
     setSaveErrors([]);
@@ -468,6 +495,7 @@ export default function BookingCoordination() {
   const handleBackToSearch = () => {
     setSelectedOrder(null);
     setSearchQuery("");
+    setLastSearchQuery("");
     setBooking({ ...EMPTY_BOOKING_COORDINATION });
     setSavedBooking(null);
     setSaveErrors([]);
@@ -734,6 +762,7 @@ export default function BookingCoordination() {
               label="Search orders"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.currentTarget.value ?? "")}
+              details="Type at least 3 characters to search by order number, customer name, or email."
             />
             <s-button
               onClick={handleSearch}
@@ -742,6 +771,11 @@ export default function BookingCoordination() {
               Search
             </s-button>
           </s-stack>
+          {isSearching && (
+            <s-paragraph>
+              <s-text color="subdued">Searching orders…</s-text>
+            </s-paragraph>
+          )}
         </s-stack>
       </s-section>
 
@@ -754,6 +788,9 @@ export default function BookingCoordination() {
       {orders.length > 0 && (
         <s-section heading="Results">
           <s-stack direction="block" gap="base">
+            <s-paragraph>
+              <s-text color="subdued">Showing up to 10 orders.</s-text>
+            </s-paragraph>
             {orders.map((order) => (
               <s-box
                 key={order.id}
@@ -774,6 +811,11 @@ export default function BookingCoordination() {
                           : ""}
                       </s-text>
                     </s-paragraph>
+                    {order.customerEmail && (
+                      <s-paragraph>
+                        <s-text color="subdued">{order.customerEmail}</s-text>
+                      </s-paragraph>
+                    )}
                   </s-stack>
                   <s-button
                     onClick={() => handleSelectOrder(order)}

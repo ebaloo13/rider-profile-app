@@ -92,6 +92,9 @@ function formatLocation(address: Customer["defaultAddress"]): string | null {
   return parts.length > 0 ? parts.join(", ") : null;
 }
 
+const SEARCH_DEBOUNCE_MS = 400;
+const MIN_TYPEAHEAD_QUERY_LENGTH = 3;
+
 function adminCustomerUrl(gid: string): string {
   return `shopify:admin/customers/${gid.split("/").pop()}`;
 }
@@ -332,6 +335,7 @@ export default function RiderProfile() {
   const [saveErrors, setSaveErrors] = useState<string[]>([]);
   const [uiMode, setUiMode] = useState<"edit" | "view">("edit");
   const [showOverwriteWarning, setShowOverwriteWarning] = useState(false);
+  const [lastSearchQuery, setLastSearchQuery] = useState("");
 
   const updateField = (key: keyof RiderProfileForm, value: string) => {
     setProfile((prev) => ({ ...prev, [key]: value }));
@@ -385,11 +389,29 @@ export default function RiderProfile() {
   const searchPerformed = fetcher.data?.searchPerformed ?? false;
 
   const handleSearch = () => {
+    const trimmed = searchQuery.trim();
+    setLastSearchQuery(trimmed);
     fetcher.submit(
-      { intent: "search", query: searchQuery },
+      { intent: "search", query: trimmed },
       { method: "POST" },
     );
   };
+
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length < MIN_TYPEAHEAD_QUERY_LENGTH) return;
+    if (trimmed === lastSearchQuery) return;
+
+    const timer = window.setTimeout(() => {
+      setLastSearchQuery(trimmed);
+      fetcher.submit(
+        { intent: "search", query: trimmed },
+        { method: "POST" },
+      );
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [fetcher, lastSearchQuery, searchQuery]);
 
   const handleSelectCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -405,6 +427,7 @@ export default function RiderProfile() {
   const handleChangeCustomer = () => {
     setSelectedCustomer(null);
     setSearchQuery("");
+    setLastSearchQuery("");
     setProfile({ ...EMPTY_PROFILE });
     setSavedProfile(null);
     setSaveErrors([]);
@@ -645,18 +668,26 @@ export default function RiderProfile() {
   return (
     <s-page heading="Rider Profile">
       <s-section heading="Find a Customer">
-        <s-stack direction="inline" gap="base">
-          <s-text-field
-            label="Search by name or email"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.currentTarget.value ?? "")}
-          ></s-text-field>
-          <s-button
-            onClick={handleSearch}
-            {...(isSearching ? { loading: true } : {})}
-          >
-            Search
-          </s-button>
+        <s-stack direction="block" gap="base">
+          <s-stack direction="inline" gap="base">
+            <s-text-field
+              label="Search by name or email"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.currentTarget.value ?? "")}
+              details="Type at least 3 characters to search."
+            ></s-text-field>
+            <s-button
+              onClick={handleSearch}
+              {...(isSearching ? { loading: true } : {})}
+            >
+              Search
+            </s-button>
+          </s-stack>
+          {isSearching && (
+            <s-paragraph>
+              <s-text color="subdued">Searching customers…</s-text>
+            </s-paragraph>
+          )}
         </s-stack>
       </s-section>
 
@@ -669,6 +700,9 @@ export default function RiderProfile() {
       {customers.length > 0 && (
         <s-section heading="Results">
           <s-stack direction="block" gap="base">
+            <s-paragraph>
+              <s-text color="subdued">Showing up to 10 customers.</s-text>
+            </s-paragraph>
             {customers.map((customer) => (
               <s-box
                 key={customer.id}
@@ -684,6 +718,18 @@ export default function RiderProfile() {
                     {customer.email && (
                       <s-paragraph>
                         <s-text>{customer.email}</s-text>
+                      </s-paragraph>
+                    )}
+                    {customer.phone && (
+                      <s-paragraph>
+                        <s-text color="subdued">{customer.phone}</s-text>
+                      </s-paragraph>
+                    )}
+                    {formatLocation(customer.defaultAddress) && (
+                      <s-paragraph>
+                        <s-text color="subdued">
+                          {formatLocation(customer.defaultAddress)}
+                        </s-text>
                       </s-paragraph>
                     )}
                   </s-stack>
