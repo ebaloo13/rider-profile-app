@@ -7,7 +7,7 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 
 const QUICK_ACTIONS = [
   {
-    title: "Rider Profile",
+    title: "Rider Profiles",
     description:
       "Find a customer and manage rider details such as skill level, riding style, emergency contact, rental needs, and dietary restrictions.",
     href: "/app/rider-profile",
@@ -28,7 +28,7 @@ const QUICK_ACTIONS = [
     action: "Update waiver settings",
   },
   {
-    title: "Setup Metafields",
+    title: "Metafield Setup",
     description:
       "Create or update required Shopify metafield definitions for customer profile data.",
     href: "/app/setup-metafields",
@@ -37,12 +37,12 @@ const QUICK_ACTIONS = [
 ];
 
 const STAFF_WORKFLOW = [
-  "Search or update the rider profile",
+  "Search or update rider profiles",
   "Find the customer's order",
   "Confirm trip dates",
   "Update deposit and balance status",
   "Add customer-facing notes",
-  "Confirm waiver setup",
+  "Confirm waiver settings",
 ];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -53,7 +53,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function Index() {
   return (
-    <s-page heading="Booking Coordination">
+    <s-page heading="Andes Freeride Booking Coordination">
       <s-section heading="">
         <s-paragraph>
           Manage rider profiles, trip dates, payment status, and waiver details

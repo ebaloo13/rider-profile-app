@@ -486,7 +486,7 @@ export default function RiderProfile() {
       RECOMMENDED_PROFILE_FIELDS.length - missingRecommended.length;
 
     return (
-      <s-page heading="Rider Profile">
+      <s-page heading="Rider Profiles">
         {uiMode === "edit" && (
           <s-button
             slot="primary-action"
@@ -668,7 +668,7 @@ export default function RiderProfile() {
   }
 
   return (
-    <s-page heading="Rider Profile">
+    <s-page heading="Rider Profiles">
       <s-section heading="Find a Customer">
         <s-stack direction="block" gap="base">
           <s-text-field

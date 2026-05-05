@@ -210,8 +210,8 @@ export default function SetupMetafields() {
   const runSetup = () => fetcher.submit({}, { method: "POST" });
 
   return (
-    <s-page heading="Setup Metafield Definitions">
-      <s-section heading="Rider Profile Metafields">
+    <s-page heading="Metafield Setup">
+      <s-section heading="Rider Profile Data">
         <s-paragraph>
           Registers rider profile metafield definitions and sets Customer
           Account API access (read/write for customer fields, none for internal

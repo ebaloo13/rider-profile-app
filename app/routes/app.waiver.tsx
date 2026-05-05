@@ -125,8 +125,8 @@ export default function WaiverSettings() {
   const isSaving = ["loading", "submitting"].includes(fetcher.state);
 
   return (
-    <s-page heading="Post-order waiver">
-      <s-section heading="Waiver text & version">
+    <s-page heading="Waiver Settings">
+      <s-section heading="Waiver Text & Version">
         <s-paragraph>
           Customers see this on the Customer Account order page after checkout. Update the
           version when you change the terms so accepted waivers stay auditable.

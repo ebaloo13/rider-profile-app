@@ -522,7 +522,7 @@ export default function BookingCoordination() {
 
   if (selectedOrder) {
     return (
-      <s-page heading="Booking coordination">
+      <s-page heading="Booking Coordination">
         <s-button
           slot="primary-action"
           onClick={handleSave}
@@ -531,7 +531,7 @@ export default function BookingCoordination() {
           Save
         </s-button>
 
-        <s-section heading="Order you are editing">
+        <s-section heading="Order You Are Editing">
           <s-box
             padding="base"
             borderWidth="base"
@@ -585,7 +585,7 @@ export default function BookingCoordination() {
         )}
 
         {!isLoading && (
-          <s-section heading="Booking coordination fields">
+          <s-section heading="Booking Coordination Fields">
             <s-stack direction="block" gap="base">
               <s-paragraph>
                 <s-text color="subdued">
@@ -601,7 +601,7 @@ export default function BookingCoordination() {
                   background="subdued"
                 >
                   <s-stack direction="block" gap="small">
-                    <s-heading>Review before saving</s-heading>
+                    <s-heading>Review Before Saving</s-heading>
                     {adminWarnings.map((warning) => (
                       <s-paragraph key={warning}>
                         <s-text>{warning}</s-text>
@@ -612,7 +612,7 @@ export default function BookingCoordination() {
               )}
               <s-box padding="base" borderWidth="base" borderRadius="base">
                 <s-stack direction="block" gap="base">
-                  <s-heading>Booking status</s-heading>
+                  <s-heading>Booking Status</s-heading>
                   <s-select
                     label="Booking status"
                     value={booking.booking_status}
@@ -649,7 +649,7 @@ export default function BookingCoordination() {
               </s-box>
               <s-box padding="base" borderWidth="base" borderRadius="base">
                 <s-stack direction="block" gap="base">
-                  <s-heading>Trip dates</s-heading>
+                  <s-heading>Trip Dates</s-heading>
                   <BookingDateInput
                     id="tentative-start-date"
                     label="Tentative start date"
@@ -686,7 +686,7 @@ export default function BookingCoordination() {
               </s-box>
               <s-box padding="base" borderWidth="base" borderRadius="base">
                 <s-stack direction="block" gap="base">
-                  <s-heading>Payment coordination</s-heading>
+                  <s-heading>Payment Coordination</s-heading>
                   <s-select
                     label="Payment status"
                     value={booking.payment_status}
@@ -735,7 +735,7 @@ export default function BookingCoordination() {
         )}
 
         {saveErrors.length > 0 && (
-          <s-section heading="Save errors">
+          <s-section heading="Save Errors">
             <s-stack direction="block" gap="base">
               {saveErrors.map((err, i) => (
                 <s-paragraph key={i}>
@@ -750,8 +750,8 @@ export default function BookingCoordination() {
   }
 
   return (
-    <s-page heading="Booking coordination">
-      <s-section heading="Find an order">
+    <s-page heading="Booking Coordination">
+      <s-section heading="Find an Order">
         <s-stack direction="block" gap="base">
           <s-paragraph>
             <s-text color="subdued">

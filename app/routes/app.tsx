@@ -18,11 +18,11 @@ export default function App() {
   return (
     <AppProvider embedded apiKey={apiKey}>
       <s-app-nav>
-        <s-link href="/app">Home</s-link>
-        <s-link href="/app/rider-profile">Rider Profile</s-link>
-        <s-link href="/app/booking-coordination">Booking coordination</s-link>
-        <s-link href="/app/setup-metafields">Setup Metafields</s-link>
-        <s-link href="/app/waiver">Waiver</s-link>
+        <s-link href="/app">Booking Coordination</s-link>
+        <s-link href="/app/rider-profile">Rider Profiles</s-link>
+        <s-link href="/app/booking-coordination">Orders</s-link>
+        <s-link href="/app/setup-metafields">Metafield Setup</s-link>
+        <s-link href="/app/waiver">Waiver Settings</s-link>
       </s-app-nav>
       <Outlet />
     </AppProvider>
