@@ -762,7 +762,7 @@ export default function BookingCoordination() {
           <s-text-field
             label="Search orders"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.currentTarget.value ?? "")}
+            onInput={(e) => setSearchQuery(e.currentTarget.value ?? "")}
             details="Type at least 2 characters to see order suggestions."
           />
           {trimmedSearchQuery.length < MIN_TYPEAHEAD_QUERY_LENGTH &&

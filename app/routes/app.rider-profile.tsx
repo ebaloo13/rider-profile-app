@@ -674,7 +674,7 @@ export default function RiderProfile() {
           <s-text-field
             label="Search by name or email"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.currentTarget.value ?? "")}
+            onInput={(e) => setSearchQuery(e.currentTarget.value ?? "")}
             details="Type at least 2 characters to see suggestions."
           ></s-text-field>
           {trimmedSearchQuery.length < MIN_TYPEAHEAD_QUERY_LENGTH &&
